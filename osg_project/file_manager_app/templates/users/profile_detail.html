@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - File Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">My Profile</h2>
+        <a href="{% url 'profile_edit' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            Edit Profile
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div class="flex items-center space-x-6 mb-6">
+            {% if user_profile.profile_picture %}
+                <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" class="w-32 h-32 rounded-full object-cover border-4 border-blue-200 shadow-md">
+            {% else %}
+                <div class="w-32 h-32 rounded-full bg-blue-500 flex items-center justify-center text-white text-5xl font-bold border-4 border-blue-200 shadow-md">
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                </div>
+            {% endif %}
+            <div>
+                <h3 class="text-2xl font-semibold text-gray-900">{{ user.first_name }} {{ user.last_name }}</h3>
+                <p class="text-lg text-gray-600">{{ user_profile.get_role_display }}</p>
+                <p class="text-md text-gray-500">Employee ID: {{ user_profile.employee_number }}</p>
+            </div>
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Contact Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><strong class="text-gray-600">Username:</strong> {{ user.username }}</div>
+            <div><strong class="text-gray-600">Email:</strong> {{ user.email }}</div>
+        </div>
+
+        <div class="mt-6 text-sm text-gray-500">
+            <p>Account Created: {{ user.date_joined|date:"M d, Y H:i" }}</p>
+            <p>Last Updated: {{ user_profile.updated_at|date:"M d, Y H:i" }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

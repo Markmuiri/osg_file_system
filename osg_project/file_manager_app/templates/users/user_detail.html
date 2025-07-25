@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}User Details: {{ user_obj.username }} - File Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">User Details: {{ user_obj.first_name }} {{ user_obj.last_name }}</h2>
+        <div class="flex space-x-3">
+            <a href="{% url 'user_edit' user_obj.pk %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                Edit User
+            </a>
+            {% if user_obj.pk != user.pk %} {# Prevent superuser from deleting themselves #}
+            <a href="{% url 'user_confirm_delete' user_obj.pk %}" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                Delete User
+            </a>
+            {% endif %}
+            <a href="{% url 'user_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+                Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <div class="flex items-center space-x-6 mb-6">
+            {% if user_obj.profile.profile_picture %}
+                <img src="{{ user_obj.profile.profile_picture.url }}" alt="Profile Picture" class="w-32 h-32 rounded-full object-cover border-4 border-blue-200 shadow-md">
+            {% else %}
+                <div class="w-32 h-32 rounded-full bg-blue-500 flex items-center justify-center text-white text-5xl font-bold border-4 border-blue-200 shadow-md">
+                    {{ user_obj.first_name|first|upper }}{{ user_obj.last_name|first|upper }}
+                </div>
+            {% endif %}
+            <div>
+                <h3 class="text-2xl font-semibold text-gray-900">{{ user_obj.first_name }} {{ user_obj.last_name }}</h3>
+                <p class="text-lg text-gray-600">{{ user_obj.profile.get_role_display }}</p>
+                <p class="text-md text-gray-500">Employee ID: {{ user_obj.profile.employee_number }}</p>
+            </div>
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Account Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><strong class="text-gray-600">Username:</strong> {{ user_obj.username }}</div>
+            <div><strong class="text-gray-600">Email:</strong> {{ user_obj.email }}</div>
+            <div><strong class="text-gray-600">Active:</strong> {% if user_obj.is_active %}Yes{% else %}No{% endif %}</div>
+            <div><strong class="text-gray-600">Staff Status:</strong> {% if user_obj.is_staff %}Yes{% else %}No{% endif %}</div>
+            <div><strong class="text-gray-600">Superuser Status:</strong> {% if user_obj.is_superuser %}Yes{% else %}No{% endif %}</div>
+        </div>
+
+        <div class="mt-6 text-sm text-gray-500">
+            <p>Account Created: {{ user_obj.date_joined|date:"M d, Y H:i" }}</p>
+            <p>Last Login: {% if user_obj.last_login %}{{ user_obj.last_login|date:"M d, Y H:i" }}{% else %}Never{% endif %}</p>
+            <p>Profile Last Updated: {{ user_obj.profile.updated_at|date:"M d, Y H:i" }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
