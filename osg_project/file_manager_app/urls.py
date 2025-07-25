@@ -1,5 +1,3 @@
-# file_manager_app/urls.py
-
 from django.urls import path
 from django.contrib.auth import views as auth_views # Import Django's built-in auth views
 from . import views

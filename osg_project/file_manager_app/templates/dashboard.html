@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - File Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Welcome, {{ user.first_name|default:user.username }}!</h2>
+
+    <!-- Quick Access Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white shadow-md rounded-lg p-6 flex items-center justify-between transition duration-200 ease-in-out transform hover:scale-105">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Incoming Letters</h3>
+                <p class="text-4xl font-bold text-blue-600">{{ total_incoming }}</p>
+            </div>
+            <a href="{% url 'incoming_letter_list' %}" class="text-blue-500 hover:text-blue-700">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m7 0V5a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h-2"></path></svg>
+            </a>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 flex items-center justify-between transition duration-200 ease-in-out transform hover:scale-105">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Outgoing Letters</h3>
+                <p class="text-4xl font-bold text-green-600">{{ total_outgoing }}</p>
+            </div>
+            <a href="{% url 'outgoing_letter_list' %}" class="text-green-500 hover:text-green-700">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m7 0V5a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h-2"></path></svg>
+            </a>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 flex items-center justify-between transition duration-200 ease-in-out transform hover:scale-105">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Filings</h3>
+                <p class="text-4xl font-bold text-purple-600">{{ total_filings }}</p>
+            </div>
+            <a href="{% url 'filing_list' %}" class="text-purple-500 hover:text-purple-700">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </a>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 flex items-center justify-between transition duration-200 ease-in-out transform hover:scale-105">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Add New Filing</h3>
+                <p class="text-4xl font-bold text-yellow-600">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </p>
+            </div>
+            <a href="{% url 'filing_form' %}" class="text-yellow-500 hover:text-yellow-700">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity / Lists -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Recent Incoming Letters</h3>
+            {% if recent_incoming %}
+            <ul class="divide-y divide-gray-200">
+                {% for letter in recent_incoming %}
+                <li class="py-3 flex justify-between items-center">
+                    <div>
+                        <a href="{% url 'incoming_letter_detail' letter.pk %}" class="text-blue-600 hover:underline font-medium">
+                            {{ letter.subject }}
+                        </a>
+                        <p class="text-sm text-gray-600">From: {{ letter.author }} (Ref: {{ letter.reference }})</p>
+                        <p class="text-xs text-gray-500">Received: {{ letter.received_date|date:"M d, Y" }}</p>
+                    </div>
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                        {% if letter.is_actioned %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {% if letter.is_actioned %}Actioned{% else %}Pending{% endif %}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="mt-4 text-right">
+                <a href="{% url 'incoming_letter_list' %}" class="text-blue-600 hover:underline">View All Incoming Letters &rarr;</a>
+            </div>
+            {% else %}
+            <p class="text-gray-600">No recent incoming letters.</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Recent Filings</h3>
+            {% if recent_filings %}
+            <ul class="divide-y divide-gray-200">
+                {% for filing in recent_filings %}
+                <li class="py-3 flex justify-between items-center">
+                    <div>
+                        <a href="{% url 'filing_detail' filing.pk %}" class="text-purple-600 hover:underline font-medium">
+                            {{ filing.file_name }}
+                        </a>
+                        <p class="text-sm text-gray-600">Ref: {{ filing.file_reference }} (S/N: {{ filing.serial_number }})</p>
+                        <p class="text-xs text-gray-500">Received: {{ filing.receiving_date|date:"M d, Y" }}</p>
+                    </div>
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {{ filing.receiving_department }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="mt-4 text-right">
+                <a href="{% url 'filing_list' %}" class="text-purple-600 hover:underline">View All Filings &rarr;</a>
+            </div>
+            {% else %}
+            <p class="text-gray-600">No recent filings.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

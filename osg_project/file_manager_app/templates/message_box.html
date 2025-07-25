@@ -1,0 +1,13 @@
+{# This template is not meant to be extended, but included where needed #}
+{# Example usage: {% include 'message_box.html' with type='success' message='Operation completed successfully!' %} #}
+{# Or, if using Django messages framework, it's typically handled in base.html as shown #}
+
+{% if type and message %}
+<div class="p-3 rounded-md shadow-sm
+    {% if type == 'success' %}bg-green-100 text-green-800
+    {% elif type == 'error' %}bg-red-100 text-red-800
+    {% elif type == 'warning' %}bg-yellow-100 text-yellow-800
+    {% else %}bg-blue-100 text-blue-800{% endif %}">
+    {{ message }}
+</div>
+{% endif %}
