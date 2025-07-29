@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if filing %}Edit Filing: {{ filing.file_name }}{% else %}Add New Filing{% endif %} - File Management System
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">
+        {% if filing %}Edit Filing{% else %}Add New Filing{% endif %}
+    </h2>
+
+    <div class="bg-white shadow-md rounded-lg p-8">
+        <form method="post" action="{% if filing %}{% url 'filing_edit' filing.pk %}{% else %}{% url 'filing_form' %}{% endif %}" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- File Reference -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="text" name="file_reference" id="file_reference"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ filing.file_reference|default:'' }}">
+                    <label for="file_reference" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">File Reference</label>
+                </div>
+
+                <!-- Serial Number -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="text" name="serial_number" id="serial_number"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ filing.serial_number|default:'' }}">
+                    <label for="serial_number" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Serial Number</label>
+                </div>
+
+                <!-- File Name -->
+                <div class="relative z-0 w-full mb-5 group md:col-span-2">
+                    <input type="text" name="file_name" id="file_name"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ filing.file_name|default:'' }}">
+                    <label for="file_name" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">File Name</label>
+                </div>
+
+                <!-- Receiving Department -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="text" name="receiving_department" id="receiving_department"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ filing.receiving_department|default:'' }}">
+                    <label for="receiving_department" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Receiving Department</label>
+                </div>
+
+                <!-- Receiving Officer -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <label for="receiving_officer" class="block text-sm font-medium text-gray-700 mb-1 required">Receiving Officer</label>
+                    <select name="receiving_officer" id="receiving_officer" required
+                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600">
+                        <option value="">-- Select Officer --</option>
+                        {% for officer in receiving_officers %}
+                            <option value="{{ officer.pk }}" {% if filing.receiving_officer.pk == officer.pk %}selected{% elif not filing and officer.pk == user.pk %}selected{% endif %}>
+                                {{ officer.first_name }} {{ officer.last_name }} ({{ officer.username }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if not user.is_superuser %}
+                        <p class="mt-1 text-xs text-gray-500">As a non-superuser, you can only assign yourself.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Receiving Date -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="date" name="receiving_date" id="receiving_date"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ filing.receiving_date|date:'Y-m-d'|default:'' }}">
+                    <label for="receiving_date" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Receiving Date</label>
+                </div>
+
+                <!-- Main Scanned Copy (PDF) -->
+                <div class="relative z-0 w-full mb-5 group md:col-span-2">
+                    <label for="scanned_copy" class="block text-sm font-medium text-gray-700 mb-1">Main Scanned Copy (PDF, Max 5MB) (Optional)</label>
+                    <input type="file" name="scanned_copy" id="scanned_copy" accept=".pdf"
+                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="mt-1 text-xs text-gray-500">Only PDF files are allowed.</p>
+                    {% if filing.scanned_copy %}
+                        <p class="mt-2 text-sm text-gray-600">Current File: <a href="{{ filing.scanned_copy.url }}" target="_blank" class="text-blue-600 hover:underline">{{ filing.scanned_copy.name|cut:"filings_main_scans/" }}</a></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 mt-8">
+                <a href="{% url 'filing_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                    {% if filing %}Update Filing{% else %}Add Filing{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
