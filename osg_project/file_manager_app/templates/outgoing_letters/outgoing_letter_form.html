@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if outgoing_letter %}Edit Outgoing Letter: {{ outgoing_letter.subject }}{% else %}Add Outgoing Letter{% endif %} - File Management System
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">
+        {% if outgoing_letter %}Edit Outgoing Letter{% else %}Add Outgoing Letter{% endif %}
+    </h2>
+
+    <div class="bg-white shadow-md rounded-lg p-8">
+        <form method="post" action="{% if outgoing_letter %}{% url 'outgoing_letter_edit' outgoing_letter.pk %}{% else %}{% url 'outgoing_letter_form' %}{% endif %}" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Serial Number -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="text" name="serial_number" id="serial_number"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ outgoing_letter.serial_number|default:'' }}">
+                    <label for="serial_number" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Serial No.</label>
+                </div>
+
+                <!-- Reference No. -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="text" name="reference" id="reference"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ outgoing_letter.reference|default:'' }}">
+                    <label for="reference" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Reference No.</label>
+                </div>
+
+                <!-- Subject -->
+                <div class="relative z-0 w-full mb-5 group md:col-span-2">
+                    <input type="text" name="subject" id="subject"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ outgoing_letter.subject|default:'' }}">
+                    <label for="subject" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Subject</label>
+                </div>
+
+                <!-- Recipient -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="text" name="recipient" id="recipient"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ outgoing_letter.recipient|default:'' }}">
+                    <label for="recipient" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Recipient</label>
+                </div>
+
+                <!-- Date Sent -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <input type="date" name="date_sent" id="date_sent"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" " required
+                           value="{{ outgoing_letter.date_sent|date:'Y-m-d'|default:'' }}">
+                    <label for="date_sent" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 required">Date Sent</label>
+                </div>
+
+                <!-- Sent By -->
+                <div class="relative z-0 w-full mb-5 group">
+                    <label for="sent_by" class="block text-sm font-medium text-gray-700 mb-1 required">Sent By Officer</label>
+                    <select name="sent_by" id="sent_by" required
+                            class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600">
+                        <option value="">-- Select Officer --</option>
+                        {% for officer in all_users %}
+                            <option value="{{ officer.pk }}" {% if outgoing_letter.sent_by.pk == officer.pk %}selected{% elif not outgoing_letter and officer.pk == user.pk %}selected{% endif %}>
+                                {{ officer.first_name }} {{ officer.last_name }} ({{ officer.username }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Scanned Copy -->
+                <div class="relative z-0 w-full mb-5 group md:col-span-2">
+                    <label for="scanned_copy" class="block text-sm font-medium text-gray-700 mb-1">Scanned Copy (PDF, Max 5MB) (Optional)</label>
+                    <input type="file" name="scanned_copy" id="scanned_copy" accept=".pdf"
+                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="mt-1 text-xs text-gray-500">Only PDF files are allowed.</p>
+                    {% if outgoing_letter.scanned_copy %}
+                        <p class="mt-2 text-sm text-gray-600">Current File: <a href="{{ outgoing_letter.scanned_copy.url }}" target="_blank" class="text-blue-600 hover:underline">{{ outgoing_letter.scanned_copy.name|cut:"outgoing_letters_scans/" }}</a></p>
+                    {% endif %}
+                </div>
+
+                <!-- Remarks -->
+                <div class="relative z-0 w-full mb-5 group md:col-span-2">
+                    <textarea name="remarks" id="remarks" rows="3"
+                           class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                           placeholder=" ">{{ outgoing_letter.remarks|default:'' }}</textarea>
+                    <label for="remarks" class="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Remarks (Optional)</label>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 mt-8">
+                <a href="{% url 'outgoing_letter_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                    {% if outgoing_letter %}Update Letter{% else %}Add Letter{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

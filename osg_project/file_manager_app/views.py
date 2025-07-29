@@ -578,3 +578,18 @@ def custom_404_view(request, exception):
 def custom_500_view(request):
     return render(request, '500.html', status=500)
 
+ 
+    def __init__(self, *args, **kwargs):
+        # The 'filing' instance should be passed from the view when creating a document
+        self.filing_instance = kwargs.pop('filing_instance', None)
+        super().__init__(*args, **kwargs)
+        # If this form is used to add a new document, the 'filing' field should be set by the view
+        # or it could be a hidden field. For simplicity, we assume the view sets it.
+        if self.filing_instance:
+            self.instance.filing = self.filing_instance
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Custom validation for uploaded_file is handled by the model's validator.
+        # Any additional form-level validation can go here.
+        return cleaned_data

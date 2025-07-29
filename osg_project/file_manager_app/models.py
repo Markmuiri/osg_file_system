@@ -323,6 +323,9 @@ class Filing(models.Model):
         verbose_name_plural = "Filings"
         ordering = ['-receiving_date', '-created_at']
 
+class Meta:
+        model = FilingDocument
+        fields = ['document_name', 'folio_number', 'uploaded_file']
 
 class FilingDocument(models.Model):
     """
