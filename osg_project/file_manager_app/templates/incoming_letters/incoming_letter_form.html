@@ -70,7 +70,7 @@
                 </div>
 
                 <!-- Receiving Officer -->
-                <div class="relative z-0 w-full mb-5 group">
+                <!-- <div class="relative z-0 w-full mb-5 group">
                     <label for="receiving_officer" class="block text-sm font-medium text-gray-700 mb-1 required">Receiving Officer</label>
                     <select name="receiving_officer" id="receiving_officer" required
                             class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600">
@@ -84,15 +84,15 @@
                     {% if not user.is_superuser %}
                         <p class="mt-1 text-xs text-gray-500">As a non-superuser, you can only assign yourself.</p>
                     {% endif %}
-                </div>
+                </div> -->
 
                 <!-- Actioned Checkbox -->
-                <div class="relative z-0 w-full mb-5 group flex items-center pt-4">
+                <!-- <div class="relative z-0 w-full mb-5 group flex items-center pt-4">
                     <input type="checkbox" name="is_actioned" id="is_actioned"
                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                            {% if incoming_letter.is_actioned %}checked{% endif %}>
                     <label for="is_actioned" class="ms-2 text-sm font-medium text-gray-900">Letter Actioned?</label>
-                </div>
+                </div> -->
 
                 <!-- Signed By -->
                 <div class="relative z-0 w-full mb-5 group">
