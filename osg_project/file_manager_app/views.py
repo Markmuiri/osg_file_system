@@ -166,7 +166,7 @@ def user_edit(request, pk):
         if 'profile_picture' in request.FILES:
             profile.profile_picture = request.FILES['profile_picture']
         profile.save()
-        return redirect('user_detail', pk=user.pk)
+        return redirect('file_manager_app:user_detail', pk=user.pk)
     
     context = {'user_obj': user, 'user_profile': profile, 'roles': Profile.ROLE_CHOICES}
     return render(request, 'users/user_edit.html', context)
@@ -595,5 +595,4 @@ def custom_404_view(request, exception):
 def custom_500_view(request):
     return render(request, '500.html', status=500)
 
- 
-    
+

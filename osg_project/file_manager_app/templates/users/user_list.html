@@ -62,10 +62,10 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{% url 'user_detail' user_obj.pk %}" class="text-blue-600 hover:text-blue-900 mr-4">View</a>
-                            <a href="{% url 'user_edit' user_obj.pk %}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                            <a href="{% url 'file_manager_app:user_detail' user_obj.pk %}" class="text-blue-600 hover:text-blue-900 mr-4">View</a>
+                            <a href="{% url 'file_manager_app:user_edit' user_obj.pk %}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
                             {% if user_obj.pk != user.pk %} {# Prevent superuser from deleting themselves #}
-                                <a href="{% url 'user_confirm_delete' user_obj.pk %}" class="text-red-600 hover:text-red-900">Delete</a>
+                                <a href="{% url 'file_manager_app:user_confirm_delete' user_obj.pk %}" class="text-red-600 hover:text-red-900">Delete</a>
                             {% endif %}
                         </td>
                     </tr>
