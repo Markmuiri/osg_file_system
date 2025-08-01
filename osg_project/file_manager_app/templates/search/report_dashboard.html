@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports Dashboard - File Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Reports Dashboard</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Letter Volume Report Card -->
+        <div class="bg-white shadow-md rounded-lg p-6 flex flex-col items-center text-center transition duration-200 ease-in-out transform hover:scale-105">
+            <div class="mb-4">
+                <svg class="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Letter Volume Report</h3>
+            <p class="text-gray-600 mb-4">View trends and counts of incoming and outgoing letters over time.</p>
+            <a href="{% url 'file_manager_app:letter_volume_report' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                View Report
+            </a>
+        </div>
+
+        <!-- Filing Type Report Card -->
+        <div class="bg-white shadow-md rounded-lg p-6 flex flex-col items-center text-center transition duration-200 ease-in-out transform hover:scale-105">
+            <div class="mb-4">
+                <svg class="w-16 h-16 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Filing Type Report</h3>
+            <p class="text-gray-600 mb-4">Analyze filings by department or category to identify trends.</p>
+            <a href="{% url 'file_manager_app:filing_type_report' %}" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                View Report
+            </a>
+        </div>
+
+        <!-- Add more report cards here as needed -->
+        {# Example for a placeholder report #}
+        {#
+        <div class="bg-white shadow-md rounded-lg p-6 flex flex-col items-center text-center transition duration-200 ease-in-out transform hover:scale-105">
+            <div class="mb-4">
+                <svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Custom Report</h3>
+            <p class="text-gray-600 mb-4">Generate custom reports based on various criteria.</p>
+            <a href="#" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                Generate Report
+            </a>
+        </div>
+        #}
+    </div>
+</div>
+{% endblock %}

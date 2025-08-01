@@ -11,7 +11,7 @@
     </h2>
 
     <div class="bg-white shadow-md rounded-lg p-8">
-        <form method="post" action="{% if incoming_letter %}{% url 'incoming_letter_edit' incoming_letter.pk %}{% else %}{% url 'incoming_letter_form' %}{% endif %}" enctype="multipart/form-data" class="space-y-6">
+        <form method="post" action="{% if incoming_letter %}{% url 'file_manager_app:incoming_letter_edit' incoming_letter.pk %}{% else %}{% url 'file_manager_app:incoming_letter_form' %}{% endif %}" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -138,7 +138,7 @@
             </div>
 
             <div class="flex justify-end space-x-4 mt-8">
-                <a href="{% url 'incoming_letter_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                <a href="{% url 'file_manager_app:incoming_letter_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
                     Cancel
                 </a>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">

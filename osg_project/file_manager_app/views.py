@@ -188,10 +188,12 @@ def user_confirm_delete(request, pk):
 # --- Incoming Letters Views ---
 @login_required
 def incoming_letter_list(request):
-    """Displays a list of all incoming letters."""
+    """
+    Displays a list of all incoming letters.
+    """
     letters = IncomingLetter.objects.all().select_related('receiving_officer', 'signed_by')
     context = {'incoming_letters': letters}
-    return render(request, 'incoming_letters/incoming_letter_list.html', context)
+    return render(request, 'letters/incoming_letter_list.html', context)
 
 @login_required
 def incoming_letter_detail(request, pk):
@@ -495,6 +497,21 @@ def filing_document_confirm_delete(request, pk):
     context = {'filing_document': filing_document}
     return render(request, 'filings/filing_document_confirm_delete.html', context)
 
+def __init__(self, *args, **kwargs):
+        # The 'filing' instance should be passed from the view when creating a document
+        self.filing_instance = kwargs.pop('filing_instance', None)
+        super().__init__(*args, **kwargs)
+        # If this form is used to add a new document, the 'filing' field should be set by the view
+        # or it could be a hidden field. For simplicity, we assume the view sets it.
+        if self.filing_instance:
+            self.instance.filing = self.filing_instance
+
+def clean(self):
+        cleaned_data = super().clean()
+        # Custom validation for uploaded_file is handled by the model's validator.
+        # Any additional form-level validation can go here.
+        return cleaned_data
+
 
 # --- Search & Reporting Views ---
 @login_required
@@ -579,17 +596,4 @@ def custom_500_view(request):
     return render(request, '500.html', status=500)
 
  
-    def __init__(self, *args, **kwargs):
-        # The 'filing' instance should be passed from the view when creating a document
-        self.filing_instance = kwargs.pop('filing_instance', None)
-        super().__init__(*args, **kwargs)
-        # If this form is used to add a new document, the 'filing' field should be set by the view
-        # or it could be a hidden field. For simplicity, we assume the view sets it.
-        if self.filing_instance:
-            self.instance.filing = self.filing_instance
-
-    def clean(self):
-        cleaned_data = super().clean()
-        # Custom validation for uploaded_file is handled by the model's validator.
-        # Any additional form-level validation can go here.
-        return cleaned_data
+    

@@ -62,37 +62,43 @@
             <p class="text-sm text-gray-400">Office of Solicitor General</p>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-2">
-            <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
+            <a href="{% url 'file_manager_app:dashboard' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m0 0l7 7m-2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                 Dashboard
             </a>
-            <a href="{% url 'incoming_letter_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
+            <a href="{% url 'file_manager_app:incoming_letter_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m7 0V5a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h-2"></path></svg>
                 Incoming Letters
             </a>
-            <a href="{% url 'outgoing_letter_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
+            <a href="{% url 'file_manager_app:outgoing_letter_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m7 0V5a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h-2"></path></svg>
                 Outgoing Letters
             </a>
-            <a href="{% url 'filing_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
+            <a href="{% url 'file_manager_app:filing_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 Filings
             </a>
-            <a href="{% url 'search_results' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
+            <a href="{% url 'file_manager_app:search_results' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 Search
             </a>
-            <a href="{% url 'report_dashboard' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
+            <a href="{% url 'file_manager_app:report_dashboard' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 Reports
             </a>
             {% if user.is_authenticated %}
                 {% if user.is_superuser %}
-                <a href="{% url 'user_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
+                <a href="{% url 'file_manager_app:user_list' %}" class="flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition duration-150 ease-in-out">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H2v-2a3 3 0 015.356-1.857M17 20v-2c0-.653-.189-1.267-.518-1.815m-1.783 1.815A7.962 7.962 0 0112 16a7.962 7.962 0 01-2.699-.472M9 12a4 4 0 11-8 0 4 4 0 018 0zm7 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     User Management
                 </a>
                 {% endif %}
+                <a href="{% url 'file_manager_app:profile_detail' %}" class="block text-sm text-blue-400 hover:text-blue-300 mb-2">My Profile</a>
+                <a href="{% url 'logout' %}" class="block text-sm text-red-400 hover:text-red-300">Logout</a>
+            {% else %}
+            <p class="text-sm text-gray-400 mb-2">Welcome, Guest!</p>
+            <a href="{% url 'file_manager_app:login' %}" class="block text-sm text-blue-400 hover:text-blue-300">Login</a>
+            <a href="{% url 'file_manager_app:register' %}" class="block text-sm text-green-400 hover:text-green-300 mt-1">Register</a>
             {% endif %}
         </nav>
         <div class="p-4 border-t border-gray-700">
@@ -110,12 +116,12 @@
                     <p class="text-xs text-gray-400">{{ user.profile.get_role_display }}</p>
                 </div>
             </div>
-            <a href="{% url 'profile_detail' %}" class="block text-sm text-blue-400 hover:text-blue-300 mb-2">My Profile</a>
+            <a href="{% url 'file_manager_app:profile_detail' %}" class="block text-sm text-blue-400 hover:text-blue-300 mb-2">My Profile</a>
             <a href="{% url 'logout' %}" class="block text-sm text-red-400 hover:text-red-300">Logout</a>
             {% else %}
             <p class="text-sm text-gray-400 mb-2">Welcome, Guest!</p>
-            <a href="{% url 'login' %}" class="block text-sm text-blue-400 hover:text-blue-300">Login</a>
-            <a href="{% url 'register' %}" class="block text-sm text-green-400 hover:text-green-300 mt-1">Register</a>
+            <a href="{% url 'file_manager_app:login' %}" class="block text-sm text-blue-400 hover:text-blue-300">Login</a>
+            <a href="{% url 'file_manager_app:register' %}" class="block text-sm text-green-400 hover:text-green-300 mt-1">Register</a>
             {% endif %}
         </div>
     </aside>

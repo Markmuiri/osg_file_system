@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Letter Volume Report - File Management System{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">Letter Volume Report</h2>
+        <a href="{% url 'file_manager_app:report_dashboard' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
+            Back to Reports
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Incoming Letters Volume by Month</h3>
+        {% if incoming_counts %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in incoming_counts %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.month }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-600">No incoming letter volume data available.</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Outgoing Letters Volume by Month</h3>
+        {% if outgoing_counts %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in outgoing_counts %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.month }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ item.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-600">No outgoing letter volume data available.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

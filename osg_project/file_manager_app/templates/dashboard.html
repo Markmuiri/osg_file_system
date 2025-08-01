@@ -13,7 +13,7 @@
                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Incoming Letters</h3>
                 <p class="text-4xl font-bold text-blue-600">{{ total_incoming }}</p>
             </div>
-            <a href="{% url 'incoming_letter_list' %}" class="text-blue-500 hover:text-blue-700">
+            <a href="{% url 'file_manager_app:incoming_letter_list' %}" class="text-blue-500 hover:text-blue-700">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m7 0V5a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h-2"></path></svg>
             </a>
         </div>
@@ -23,7 +23,7 @@
                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Outgoing Letters</h3>
                 <p class="text-4xl font-bold text-green-600">{{ total_outgoing }}</p>
             </div>
-            <a href="{% url 'outgoing_letter_list' %}" class="text-green-500 hover:text-green-700">
+            <a href="{% url 'file_manager_app:outgoing_letter_list' %}" class="text-green-500 hover:text-green-700">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m7 0V5a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h-2"></path></svg>
             </a>
         </div>
@@ -33,7 +33,7 @@
                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Filings</h3>
                 <p class="text-4xl font-bold text-purple-600">{{ total_filings }}</p>
             </div>
-            <a href="{% url 'filing_list' %}" class="text-purple-500 hover:text-purple-700">
+            <a href="{% url 'file_manager_app:filing_list' %}" class="text-purple-500 hover:text-purple-700">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             </a>
         </div>
@@ -45,7 +45,7 @@
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </p>
             </div>
-            <a href="{% url 'filing_form' %}" class="text-yellow-500 hover:text-yellow-700">
+            <a href="{% url 'file_manager_app:filing_form' %}" class="text-yellow-500 hover:text-yellow-700">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </a>
         </div>
@@ -60,7 +60,7 @@
                 {% for letter in recent_incoming %}
                 <li class="py-3 flex justify-between items-center">
                     <div>
-                        <a href="{% url 'incoming_letter_detail' letter.pk %}" class="text-blue-600 hover:underline font-medium">
+                        <a href="{% url 'file_manager_app:incoming_letter_detail' letter.pk %}">
                             {{ letter.subject }}
                         </a>
                         <p class="text-sm text-gray-600">From: {{ letter.author }} (Ref: {{ letter.reference }})</p>
@@ -74,7 +74,7 @@
                 {% endfor %}
             </ul>
             <div class="mt-4 text-right">
-                <a href="{% url 'incoming_letter_list' %}" class="text-blue-600 hover:underline">View All Incoming Letters &rarr;</a>
+                <a href="{% url 'file_manager_app:incoming_letter_list' %}" class="text-blue-600 hover:underline">View All Incoming Letters &rarr;</a>
             </div>
             {% else %}
             <p class="text-gray-600">No recent incoming letters.</p>
@@ -88,7 +88,7 @@
                 {% for filing in recent_filings %}
                 <li class="py-3 flex justify-between items-center">
                     <div>
-                        <a href="{% url 'filing_detail' filing.pk %}" class="text-purple-600 hover:underline font-medium">
+                        <a href="{% url 'file_manager_app:filing_detail' filing.pk %}">
                             {{ filing.file_name }}
                         </a>
                         <p class="text-sm text-gray-600">Ref: {{ filing.file_reference }} (S/N: {{ filing.serial_number }})</p>
@@ -101,7 +101,7 @@
                 {% endfor %}
             </ul>
             <div class="mt-4 text-right">
-                <a href="{% url 'filing_list' %}" class="text-purple-600 hover:underline">View All Filings &rarr;</a>
+                <a href="{% url 'file_manager_app:filing_list' %}" class="text-purple-600 hover:underline">View All Filings &rarr;</a>
             </div>
             {% else %}
             <p class="text-gray-600">No recent filings.</p>

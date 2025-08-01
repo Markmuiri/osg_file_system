@@ -8,7 +8,7 @@
 
     <!-- Search Bar (Optional, but useful to keep on results page) -->
     <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-        <form action="{% url 'search_results' %}" method="get" class="flex items-center space-x-4">
+        <form action="{% url 'file_manager_app:search_results' %}" method="get" class="flex items-center space-x-4">
             <div class="relative z-0 flex-1 group">
                 <input type="text" name="q" id="search_query"
                        class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
@@ -45,7 +45,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.author }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.received_date|date:"M d, Y" }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{% url 'incoming_letter_detail' letter.pk %}" class="text-blue-600 hover:text-blue-900">View</a>
+                            <a href="{% url 'file_manager_app:incoming_letter_detail' letter.pk %}" class="text-blue-600 hover:text-blue-900">View</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -80,7 +80,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.recipient }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.date_sent|date:"M d, Y" }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{% url 'outgoing_letter_detail' letter.pk %}" class="text-blue-600 hover:text-blue-900">View</a>
+                            <a href="{% url 'file_manager_app:outgoing_letter_detail' letter.pk %}" class="text-blue-600 hover:text-blue-900">View</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -117,7 +117,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ filing.receiving_department }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ filing.receiving_date|date:"M d, Y" }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{% url 'filing_detail' filing.pk %}" class="text-blue-600 hover:text-blue-900">View</a>
+                            <a href="{% url 'file_manager_app:filing_detail' filing.pk %}" class="text-blue-600 hover:text-blue-900">View</a>
                         </td>
                     </tr>
                     {% endfor %}
