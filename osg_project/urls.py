@@ -8,7 +8,6 @@ from osg_project.file_manager_app import views as file_manager_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', file_manager_views.dashboard, name='dashboard'),
     path('accounts/', include('django.contrib.auth.urls')),  # Django auth (login/logout/password)
     path('register/', file_manager_views.register_user, name='register'),
     path('', include(('osg_project.file_manager_app.urls', 'file_manager_app'), namespace='file_manager_app')),
