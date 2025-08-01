@@ -193,7 +193,7 @@ def incoming_letter_list(request):
     """
     letters = IncomingLetter.objects.all().select_related('receiving_officer', 'signed_by')
     context = {'incoming_letters': letters}
-    return render(request, 'letters/incoming_letter_list.html', context)
+    return render(request, 'incoming_letters/incoming_letter_list.html', context)
 
 @login_required
 def incoming_letter_detail(request, pk):
