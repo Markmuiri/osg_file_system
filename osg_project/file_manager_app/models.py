@@ -30,6 +30,17 @@ def validate_csv_excel(value):
     if value.size > 10 * 1024 * 1024:  # 10 MB limit for data files
         raise ValidationError('File size must be under 10MB.')
 
+def validate_pdf_word(value):
+    """
+    Validator to ensure the uploaded file is a PDF or Word document and within size limits.
+    """
+    file_extension = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.pdf', '.doc', '.docx']
+    if file_extension not in valid_extensions:
+        raise ValidationError('Only PDF or Word files (.pdf, .doc, .docx) are allowed.')
+    if value.size > 10 * 1024 * 1024:  # 10 MB limit
+        raise ValidationError('File size must be under 10MB.')
+
 
 # --- User Management Models ---
 
@@ -348,12 +359,12 @@ class FilingDocument(models.Model):
     )
     uploaded_file = models.FileField(
         upload_to='filing_docs/',
-        validators=[validate_csv_excel], # Apply CSV/Excel validation here
-        help_text="Upload the document (CSV or Excel format, Max 10MB)."
+        validators=[validate_pdf_word],  # Apply PDF/Word validation here
+        help_text="Upload the document (PDF or Word format, Max 10MB)."
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.document_name} ({self.filing.file_reference})"
 
-    
+
