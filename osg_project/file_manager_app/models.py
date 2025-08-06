@@ -242,12 +242,14 @@ class OutgoingLetter(models.Model):
         help_text="The officer who dispatched this letter."
     )
     scanned_copy = models.FileField(
-        upload_to='outgoing_letters_scans/',
-        verbose_name="Scanned Copy (PDF)",
+        upload_to='outgoing_letters/',
         blank=True,
-        null=True,
-        validators=[validate_pdf],
-        help_text="Upload a scanned PDF copy of the outgoing letter (Max 5MB)."
+        null=True
+    )
+    receipt_file = models.FileField(
+        upload_to='outgoing_receipts/',
+        blank=True,
+        null=True
     )
     remarks = models.TextField(
         verbose_name="Remarks",

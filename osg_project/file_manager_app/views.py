@@ -9,6 +9,10 @@ from django.utils import timezone
 from django.conf import settings # To access MEDIA_ROOT for file handling
 import os # For file path manipulation
 from django.core.files.storage import FileSystemStorage # For manual file saving
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+import tempfile
 
 # Import your models
 from .models import (
@@ -189,10 +193,18 @@ def user_confirm_delete(request, pk):
 @login_required
 def incoming_letter_list(request):
     """
-    Displays a list of all incoming letters.
+    Displays a paginated list of all incoming letters.
     """
-    letters = IncomingLetter.objects.all().select_related('receiving_officer', 'signed_by')
-    context = {'incoming_letters': letters}
+    letters = IncomingLetter.objects.all().order_by('-received_date')
+    paginator = Paginator(letters, 20)
+    page = request.GET.get('page')
+    try:
+        letter_list = paginator.page(page)
+    except PageNotAnInteger:
+        letter_list = paginator.page(1)
+    except EmptyPage:
+        letter_list = paginator.page(paginator.num_pages)
+    context = {'letter_list': letter_list}
     return render(request, 'incoming_letters/incoming_letter_list.html', context)
 
 @login_required
@@ -214,21 +226,27 @@ def incoming_letter_form(request, pk=None):
 
     # Permission logic for receiving_officer field
     if request.user.is_superuser:
-        # Superuser can select any user
         receiving_officers = User.objects.all().order_by('username')
     else:
-        # Non-superuser can only select themselves
         receiving_officers = User.objects.filter(pk=request.user.pk)
 
     if request.method == 'POST':
-        # In a real app, use Django Forms with crispy forms or custom widgets
-        data = request.POST.copy() # Make a mutable copy
-        
-        # If not superuser, force receiving_officer to current user
+        data = request.POST.copy()
         if not request.user.is_superuser:
             data['receiving_officer'] = request.user.pk
 
-        if incoming_letter: # Editing existing
+        # Check for duplicate reference before creating
+        if not incoming_letter:  # Only check on create, not edit
+            if IncomingLetter.objects.filter(reference=data['reference']).exists():
+                context = {
+                    'incoming_letter': incoming_letter,
+                    'receiving_officers': receiving_officers,
+                    'all_users': User.objects.all().order_by('username'),
+                    'error': 'An incoming letter with this reference already exists. Please use a unique reference.'
+                }
+                return render(request, 'incoming_letters/incoming_letter_form.html', context)
+
+        if incoming_letter:  # Editing existing
             incoming_letter.received_date = data.get('received_date', incoming_letter.received_date)
             incoming_letter.serial_number = data.get('serial_number', incoming_letter.serial_number)
             incoming_letter.date_of_letter = data.get('date_of_letter', incoming_letter.date_of_letter)
@@ -237,15 +255,11 @@ def incoming_letter_form(request, pk=None):
             incoming_letter.author = data.get('author', incoming_letter.author)
             incoming_letter.receiving_officer = get_object_or_404(User, pk=data['receiving_officer'])
             incoming_letter.remarks = data.get('remarks', incoming_letter.remarks)
-            incoming_letter.signed_by = get_object_or_404(User, pk=data['signed_by']) if data.get('signed_by') else None
-            incoming_letter.signed_at = data.get('signed_at', incoming_letter.signed_at)
             incoming_letter.sender = data.get('sender', incoming_letter.sender)
-            incoming_letter.is_actioned = data.get('is_actioned') == 'on' # Checkbox value 'on'
-
             if 'scanned_copy' in request.FILES:
                 incoming_letter.scanned_copy = request.FILES['scanned_copy']
             incoming_letter.save()
-        else: # Creating new
+        else:  # Creating new
             IncomingLetter.objects.create(
                 received_date=data['received_date'],
                 serial_number=data['serial_number'],
@@ -261,12 +275,12 @@ def incoming_letter_form(request, pk=None):
                 sender=data.get('sender'),
                 is_actioned=data.get('is_actioned') == 'on',
             )
-        return redirect('incoming_letter_list')
+        return redirect('file_manager_app:incoming_letter_list')
     else:
         context = {
             'incoming_letter': incoming_letter,
             'receiving_officers': receiving_officers,
-            'all_users': User.objects.all().order_by('username'), # For signed_by dropdown
+            'all_users': User.objects.all().order_by('username'),
         }
         return render(request, 'incoming_letters/incoming_letter_form.html', context)
 
@@ -284,9 +298,19 @@ def incoming_letter_confirm_delete(request, pk):
 # --- Outgoing Letters Views ---
 @login_required
 def outgoing_letter_list(request):
-    """Displays a list of all outgoing letters."""
-    letters = OutgoingLetter.objects.all().select_related('sent_by')
-    context = {'outgoing_letters': letters}
+    """
+    Displays a paginated list of all outgoing letters.
+    """
+    letters = OutgoingLetter.objects.all().order_by('-date_sent')
+    paginator = Paginator(letters, 20)
+    page = request.GET.get('page')
+    try:
+        letter_list = paginator.page(page)
+    except PageNotAnInteger:
+        letter_list = paginator.page(1)
+    except EmptyPage:
+        letter_list = paginator.page(paginator.num_pages)
+    context = {'letter_list': letter_list}
     return render(request, 'outgoing_letters/outgoing_letter_list.html', context)
 
 @login_required
@@ -363,9 +387,19 @@ def outgoing_letter_receipt(request, pk):
 # --- Filings Views ---
 @login_required
 def filing_list(request):
-    """Displays a list of all filings."""
-    filings = Filing.objects.all().select_related('receiving_officer')
-    context = {'filings': filings}
+    """
+    Displays a paginated list of all filings.
+    """
+    filings = Filing.objects.all().order_by('-receiving_date')
+    paginator = Paginator(filings, 20)
+    page = request.GET.get('page')
+    try:
+        filing_list = paginator.page(page)
+    except PageNotAnInteger:
+        filing_list = paginator.page(1)
+    except EmptyPage:
+        filing_list = paginator.page(paginator.num_pages)
+    context = {'filing_list': filing_list}
     return render(request, 'filings/filing_list.html', context)
 
 @login_required
@@ -575,12 +609,19 @@ def letter_volume_report(request):
 
 @login_required
 def filing_type_report(request):
-    """Generates and displays a report on filing types (e.g., by department)."""
-    filing_department_counts = Filing.objects.values('receiving_department').annotate(count=Count('id')).order_by('receiving_department')
-    
-    context = {
-        'filing_department_counts': filing_department_counts,
-    }
+    """
+    Renders the filing type report with pagination.
+    """
+    filings = Filing.objects.all().order_by('-receiving_date')
+    paginator = Paginator(filings, 20)
+    page = request.GET.get('page')
+    try:
+        filing_list = paginator.page(page)
+    except PageNotAnInteger:
+        filing_list = paginator.page(1)
+    except EmptyPage:
+        filing_list = paginator.page(paginator.num_pages)
+    context = {'filing_list': filing_list}
     return render(request, 'reports/filing_type_report.html', context)
 
 
@@ -594,5 +635,39 @@ def custom_404_view(request, exception):
 
 def custom_500_view(request):
     return render(request, '500.html', status=500)
+
+@login_required
+def incoming_letter_print_and_move(request, pk):
+    """
+    Prints a receipt for the incoming letter, moves it to outgoing, and attaches the printout.
+    """
+    incoming_letter = get_object_or_404(IncomingLetter, pk=pk)
+
+    # Generate receipt HTML (or PDF if you use a library)
+    receipt_html = render_to_string('outgoing_letters/outgoing_letter_receipt.html', {'outgoing_letter': incoming_letter})
+
+    # Save receipt as a temporary file (PDF or HTML)
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as tmp:
+        tmp.write(receipt_html.encode('utf-8'))
+        tmp_path = tmp.name
+
+    # Create OutgoingLetter and attach receipt
+    outgoing_letter = OutgoingLetter.objects.create(
+        reference=incoming_letter.reference,
+        subject=incoming_letter.subject,
+        recipient=incoming_letter.author,
+        date_sent=timezone.now(),
+        sent_by=incoming_letter.receiving_officer,
+        serial_number=f"OUT-{incoming_letter.serial_number}",
+        remarks=incoming_letter.remarks,
+        scanned_copy=incoming_letter.scanned_copy,
+        receipt_file=tmp_path  # You may need a FileField for this
+    )
+
+    # Remove from IncomingLetter
+    incoming_letter.delete()
+
+    # Redirect to outgoing letter detail or show/download receipt
+    return redirect('file_manager_app:outgoing_letter_detail', pk=outgoing_letter.pk)
 
 

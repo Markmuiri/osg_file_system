@@ -12,56 +12,30 @@
         </a>
     </div>
 
-    {% if incoming_letters %}
+    {% if letter_list.object_list %}
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            S/No
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Reference
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Subject
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Author
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Received Date
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Receiving Officer
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actioned
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S/No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Received Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receiving Officer</th>
+                        <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actioned</th> -->
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    {% for letter in incoming_letters %}
+                    {% for letter in letter_list.object_list %}
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ letter.serial_number }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ letter.reference }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ letter.subject }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ letter.author }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ letter.received_date|date:"M d, Y" }}
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ letter.serial_number }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.reference }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.subject }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.author }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ letter.received_date|date:"M d, Y" }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {% if letter.receiving_officer %}
                                 <a href="{% url 'file_manager_app:user_detail' letter.receiving_officer.pk %}" class="text-blue-600 hover:underline">
@@ -71,17 +45,18 @@
                                 N/A
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <!-- <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 {% if letter.is_actioned %}bg-green-100 text-green-800
                                 {% else %}bg-yellow-100 text-yellow-800{% endif %}">
                                 {% if letter.is_actioned %}Yes{% else %}No{% endif %}
                             </span>
-                        </td>
+                        </td> -->
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <a href="{% url 'file_manager_app:incoming_letter_detail' letter.pk %}" class="text-blue-600 hover:text-blue-900 mr-4">View</a>
                             <a href="{% url 'file_manager_app:incoming_letter_edit' letter.pk %}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
                             <a href="{% url 'file_manager_app:incoming_letter_confirm_delete' letter.pk %}" class="text-red-600 hover:text-red-900">Delete</a>
+                            <a href="{% url 'file_manager_app:incoming_letter_print_and_move' letter.pk %}" class="text-green-600 hover:text-green-900 mr-4"> Receipt</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -89,6 +64,32 @@
             </table>
         </div>
     </div>
+
+    {% if letter_list.has_other_pages %}
+    <div class="flex justify-center mt-6">
+        <nav class="inline-flex rounded-md shadow">
+            {% if letter_list.has_previous %}
+                <a href="?page={{ letter_list.previous_page_number }}" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-l hover:bg-gray-300">Previous</a>
+            {% else %}
+                <span class="px-3 py-2 bg-gray-100 text-gray-400 rounded-l">Previous</span>
+            {% endif %}
+
+            {% for num in letter_list.paginator.page_range %}
+                {% if letter_list.number == num %}
+                    <span class="px-3 py-2 bg-blue-600 text-white">{{ num }}</span>
+                {% elif num > letter_list.number|add:'-3' and num < letter_list.number|add:'3' %}
+                    <a href="?page={{ num }}" class="px-3 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if letter_list.has_next %}
+                <a href="?page={{ letter_list.next_page_number }}" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-r hover:bg-gray-300">Next</a>
+            {% else %}
+                <span class="px-3 py-2 bg-gray-100 text-gray-400 rounded-r">Next</span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
     {% else %}
     <div class="bg-white shadow-md rounded-lg p-6 text-center text-gray-600">
         <p class="text-lg font-semibold mb-2">No incoming letters found.</p>

@@ -563,9 +563,9 @@ class FilingDocumentForm(forms.ModelForm):
         label="Folio Number"
     )
     uploaded_file = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={**FILE_INPUT_WIDGET_ATTRS, 'accept': '.csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
-        label="Upload Document (CSV/Excel, Max 10MB)",
-        validators=[validate_csv_excel]
+        widget=forms.ClearableFileInput(attrs={**FILE_INPUT_WIDGET_ATTRS, 'accept': '.pdf,.docx,.xlsx,.csv'}),
+        label="Upload Document (PDF, Max 10MB)",
+        validators=[validate_pdf]
     )
 
    

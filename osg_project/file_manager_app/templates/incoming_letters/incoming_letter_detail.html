@@ -7,15 +7,15 @@
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-3xl font-bold text-gray-800">Incoming Letter Details</h2>
         <div class="flex space-x-3">
-            <a href="{% url 'incoming_letter_edit' incoming_letter.pk %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+            <a href="{% url 'file_manager_app:incoming_letter_edit' incoming_letter.pk %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 Edit Letter
             </a>
-            <a href="{% url 'incoming_letter_confirm_delete' incoming_letter.pk %}" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+            <a href="{% url 'file_manager_app:incoming_letter_confirm_delete' incoming_letter.pk %}" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 Delete Letter
             </a>
-            <a href="{% url 'incoming_letter_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
+            <a href="{% url 'file_manager_app:incoming_letter_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
                 Back to List
             </a>
@@ -30,39 +30,39 @@
             <div><strong class="text-gray-600">Subject:</strong> {{ incoming_letter.subject }}</div>
             <div><strong class="text-gray-600">Author/Sender:</strong> {{ incoming_letter.author }}</div>
             <div><strong class="text-gray-600">Date of Letter:</strong> {{ incoming_letter.date_of_letter|date:"M d, Y" }}</div>
-            <div><strong class="text-gray-600">Date Received:</strong> {{ incoming_letter.received_date|date:"M d, Y H:i" }}</div>
+            <div><strong class="text-gray-600">Date Received:</strong> {{ incoming_letter.received_date|date:"M d, Y " }}</div>
             <div><strong class="text-gray-600">Receiving Officer:</strong>
                 {% if incoming_letter.receiving_officer %}
-                    <a href="{% url 'user_detail' incoming_letter.receiving_officer.pk %}" class="text-blue-600 hover:underline">
+                    <a href="{% url 'file_manager_app:user_detail' incoming_letter.receiving_officer.pk %}" class="text-blue-600 hover:underline">
                         {{ incoming_letter.receiving_officer.first_name }} {{ incoming_letter.receiving_officer.last_name }}
                     </a>
                 {% else %}
                     N/A
                 {% endif %}
             </div>
-            <div><strong class="text-gray-600">Actioned:</strong>
+            <!-- <div><strong class="text-gray-600">Actioned:</strong>
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                     {% if incoming_letter.is_actioned %}bg-green-100 text-green-800
                     {% else %}bg-yellow-100 text-yellow-800{% endif %}">
                     {% if incoming_letter.is_actioned %}Yes{% else %}No{% endif %}
-                </span>
+                </span> -->
             </div>
-            <div><strong class="text-gray-600">Signed By:</strong>
+            <!-- <div><strong class="text-gray-600">Signed By:</strong>
                 {% if incoming_letter.signed_by %}
                     <a href="{% url 'user_detail' incoming_letter.signed_by.pk %}" class="text-blue-600 hover:underline">
                         {{ incoming_letter.signed_by.first_name }} {{ incoming_letter.signed_by.last_name }}
                     </a>
                 {% else %}
                     N/A
-                {% endif %}
-            </div>
-            <div><strong class="text-gray-600">Signed At:</strong> {% if incoming_letter.signed_at %}{{ incoming_letter.signed_at|date:"M d, Y" }}{% else %}N/A{% endif %}</div>
+                {% endif %} -->
+            <!-- </div> -->
+            <!-- <div><strong class="text-gray-600">Signed At:</strong> {% if incoming_letter.signed_at %}{{ incoming_letter.signed_at|date:"M d, Y" }}{% else %}N/A{% endif %}</div>
             {% if incoming_letter.signature %}
                 <div class="md:col-span-2">
                     <strong class="text-gray-600">Signature:</strong><br>
                     <img src="{{ incoming_letter.signature.url }}" alt="Signature" class="mt-2 max-w-xs border rounded-md shadow-sm">
                 </div>
-            {% endif %}
+            {% endif %} -->
             <div class="md:col-span-2"><strong class="text-gray-600">Remarks:</strong> {{ incoming_letter.remarks|default:"N/A" }}</div>
         </div>
 
@@ -80,6 +80,13 @@
             <p>Record Created: {{ incoming_letter.created_at|date:"M d, Y H:i" }}</p>
             <p>Last Updated: {{ incoming_letter.updated_at|date:"M d, Y H:i" }}</p>
         </div>
+    </div>
+    <div class="mt-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Actions</h3>
+        <a href="{% url 'file_manager_app:incoming_letter_print_and_move' incoming_letter.pk %}" class="text-green-600 hover:text-green-900 mr-4">
+            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-3-3v6m8-9a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V9l-4-4z"></path></svg>
+            Print Receipt
+        </a>
     </div>
 </div>
 {% endblock %}

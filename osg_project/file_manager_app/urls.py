@@ -22,6 +22,7 @@ urlpatterns = [
     path('letters/incoming/<int:pk>/', views.incoming_letter_detail, name='incoming_letter_detail'),
     path('letters/incoming/<int:pk>/edit/', views.incoming_letter_form, name='incoming_letter_edit'),
     path('letters/incoming/<int:pk>/delete/confirm/', views.incoming_letter_confirm_delete, name='incoming_letter_confirm_delete'),
+    path('letters/incoming/<int:pk>/print-and-move/', views.incoming_letter_print_and_move, name='incoming_letter_print_and_move'),
 
     # Outgoing Letters
     path('letters/outgoing/', views.outgoing_letter_list, name='outgoing_letter_list'),
