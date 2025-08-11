@@ -13,7 +13,8 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 import tempfile
-
+from django.shortcuts import render, redirect
+from .file_utils import delete_file_soft, get_archived_files
 # Import your models
 from .models import (
     Profile, IncomingLetter, OutgoingLetter,
@@ -671,3 +672,26 @@ def incoming_letter_print_and_move(request, pk):
     return redirect('file_manager_app:outgoing_letter_detail', pk=outgoing_letter.pk)
 
 
+# my_app/views.py
+
+
+
+def delete_document_view(request, document_path):
+    """
+    Handles the request to soft-delete a document.
+    """
+    if request.method == 'POST':
+        success = delete_file_soft(document_path)
+        if success:
+            # Add a success message for the user
+            return redirect('file_list')
+        else:
+            # Handle the error, maybe show an error message
+            return render(request, 'error.html')
+
+    # For GET requests, show a confirmation page
+    return render(request, 'confirm_delete.html', {'document_path': document_path})
+
+def archived_files_list(request):
+    archived_files = get_archived_files()
+    return render(request, 'files/archived_files_list.html', {'archived_files': archived_files})

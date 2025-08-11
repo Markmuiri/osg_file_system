@@ -48,4 +48,7 @@ urlpatterns = [
     path('reports/', views.report_dashboard, name='report_dashboard'),
     path('reports/letter-volume/', views.letter_volume_report, name='letter_volume_report'),
     path('reports/filing-type/', views.filing_type_report, name='filing_type_report'),
+
+    # Archived Files
+    path('files/archived/', views.archived_files_list, name='archived_files_list'),
 ]
