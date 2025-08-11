@@ -5,19 +5,45 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h2 class="text-3xl font-bold text-gray-800 mb-6">Archived Files</h2>
-    <ul class="bg-white shadow-md rounded-lg p-6">
-      {% for file in archived_files %}
-        <li class="mb-2 flex flex-col md:flex-row md:items-center md:space-x-4">
-          <span class="font-semibold">{{ file.original_name }}</span>
-          <span class="text-gray-500">(archived on {{ file.archived_date }})</span>
-          {% if file.archived_name %}
-            <span class="text-xs text-gray-400 break-all">[{{ file.archived_name }}]</span>
-          {% endif %}
-        </li>
-      {% empty %}
-        <li>No archived files found.</li>
-      {% endfor %}
-    </ul>
+    {% for category, files, label in [
+        ('archived_incoming', archived_incoming, 'Incoming Letters'),
+        ('archived_outgoing', archived_outgoing, 'Outgoing Letters'),
+        ('archived_filing', archived_filing, 'Filing Documents')
+    ] %}
+        <h3 class="text-xl font-semibold text-gray-700 mt-8 mb-2">{{ label }}</h3>
+        <table class="min-w-full bg-white shadow rounded mb-6">
+            <thead>
+                <tr>
+                    <th class="px-4 py-2 text-left">Original Name</th>
+                    <th class="px-4 py-2 text-left">Reference</th>
+                    <th class="px-4 py-2 text-left">Subject</th>
+                    <th class="px-4 py-2 text-left">Archived On</th>
+                    <th class="px-4 py-2 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <td class="px-4 py-2 font-semibold">{{ file.original_name }}</td>
+                    <td class="px-4 py-2">{{ file.reference }}</td>
+                    <td class="px-4 py-2">{{ file.subject }}</td>
+                    <td class="px-4 py-2">{{ file.archived_date|date:"Y-m-d H:i" }}</td>
+                    <td class="px-4 py-2">
+                        <form method="post" action="{% url 'file_manager_app:restore_archived_file' file.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-green-500 hover:bg-green-700 text-white px-3 py-1 rounded">
+                                Restore
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-4 py-2 text-gray-400">No archived files in this category.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
 </div>
-
 {% endblock %}
