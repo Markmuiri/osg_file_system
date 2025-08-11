@@ -10,10 +10,10 @@
         <p class="text-gray-600 mb-6">Are you sure you want to delete the outgoing letter: <span class="font-semibold text-gray-900">{{ outgoing_letter.subject }}</span> (Reference: <span class="font-semibold text-gray-900">{{ outgoing_letter.reference }}</span>) to <span class="font-semibold text-gray-900">{{ outgoing_letter.recipient }}</span>?</p>
         <p class="text-red-500 font-medium mb-8">This action cannot be undone.</p>
 
-        <form method="post" action="{% url 'outgoing_letter_confirm_delete' outgoing_letter.pk %}">
+        <form method="post" action="{% url 'file_manager_app:outgoing_letter_confirm_delete' outgoing_letter.pk %}">
             {% csrf_token %}
             <div class="flex justify-center space-x-4">
-                <a href="{% url 'outgoing_letter_detail' outgoing_letter.pk %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
+                <a href="{% url 'file_manager_app:outgoing_letter_detail' outgoing_letter.pk %}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">
                     Cancel
                 </a>
                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-150 ease-in-out">

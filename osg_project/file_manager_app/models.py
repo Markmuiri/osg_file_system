@@ -370,3 +370,59 @@ class FilingDocument(models.Model):
         return f"{self.document_name} ({self.filing.file_reference})"
 
 
+# --- Archived Files Model ---
+
+class ArchivedFile(models.Model):
+    """
+    Represents a file that has been archived, either incoming/outgoing letters or filing documents.
+    """
+    CATEGORY_CHOICES = [
+        ('incoming', 'Incoming Letter'),
+        ('outgoing', 'Outgoing Letter'),
+        ('filing', 'Filing Document'),
+    ]
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        help_text="The category of the archived file."
+    )
+    original_name = models.CharField(
+        max_length=255,
+        help_text="The original name of the file before archiving."
+    )
+    archived_name = models.CharField(
+        max_length=255,
+        help_text="The name of the file in the archive storage."
+    )
+    archived_date = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date and time when the file was archived."
+    )
+    reference = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Optional reference number associated with the file."
+    )
+    subject = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Optional subject or title of the file."
+    )
+    extra_info = models.TextField(
+        blank=True,
+        help_text="Any extra information or notes about the archived file."
+    )
+    restored = models.BooleanField(
+        default=False,
+        help_text="Indicates if the file has been restored from the archive."
+    )
+
+    def __str__(self):
+        return f"{self.original_name} ({self.get_category_display()})"
+
+    class Meta:
+        verbose_name = "Archived File"
+        verbose_name_plural = "Archived Files"
+        ordering = ['-archived_date']
+
+

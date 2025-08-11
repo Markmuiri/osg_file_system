@@ -7,13 +7,17 @@
     <h2 class="text-3xl font-bold text-gray-800 mb-6">Archived Files</h2>
     <ul class="bg-white shadow-md rounded-lg p-6">
       {% for file in archived_files %}
-        <li class="mb-2">
+        <li class="mb-2 flex flex-col md:flex-row md:items-center md:space-x-4">
           <span class="font-semibold">{{ file.original_name }}</span>
           <span class="text-gray-500">(archived on {{ file.archived_date }})</span>
+          {% if file.archived_name %}
+            <span class="text-xs text-gray-400 break-all">[{{ file.archived_name }}]</span>
+          {% endif %}
         </li>
       {% empty %}
         <li>No archived files found.</li>
       {% endfor %}
     </ul>
 </div>
+
 {% endblock %}

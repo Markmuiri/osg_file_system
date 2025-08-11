@@ -2,50 +2,31 @@
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
-from django.db.models import Count, Q # Q for complex lookups in search/reports
+from django.db.models import Count, Q
 from django.utils import timezone
-from django.conf import settings # To access MEDIA_ROOT for file handling
-import os # For file path manipulation
-from django.core.files.storage import FileSystemStorage # For manual file saving
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 import tempfile
-from django.shortcuts import render, redirect
-from .file_utils import delete_file_soft, get_archived_files
-# Import your models
-from .models import (
-    Profile, IncomingLetter, OutgoingLetter,
-    Filing, FilingDocument
-)
+
+from .file_utils import delete_file_soft, get_archived_files, setup_directories
+from .models import Profile, IncomingLetter, OutgoingLetter, Filing, FilingDocument
 
 # --- Helper for Superuser Check ---
 def is_superuser(user):
     return user.is_superuser
 
-# --- Authentication Views (using Django's built-in views in urls.py is common) ---
-# For login/logout, Django provides built-in views in django.contrib.auth.views.
-# You'll typically configure these in your osg_project/urls.py or file_manager_app/urls.py
-# Example:
-# from django.contrib.auth import views as auth_views
-# path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-# path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
-
 # --- Dashboard View ---
 @login_required
 def dashboard(request):
-    """
-    Renders the main dashboard with quick access cards and key statistics.
-    """
-    # Quick Access Card Data (placeholders)
     total_incoming = IncomingLetter.objects.count()
     total_outgoing = OutgoingLetter.objects.count()
     total_filings = Filing.objects.count()
     recent_incoming = IncomingLetter.objects.order_by('-received_date')[:5]
     recent_filings = Filing.objects.order_by('-receiving_date')[:5]
-
     context = {
         'total_incoming': total_incoming,
         'total_outgoing': total_outgoing,
@@ -57,11 +38,7 @@ def dashboard(request):
 
 # --- User Management Views ---
 def register_user(request):
-    """
-    Handles user registration.
-    """
     if request.method == 'POST':
-        # In a real app, use Django's UserCreationForm or a custom form
         username = request.POST.get('username')
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
@@ -69,102 +46,70 @@ def register_user(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         password_confirm = request.POST.get('password_confirm')
-
         if password != password_confirm:
-            # Handle password mismatch error
             return render(request, 'users/register.html', {'error': 'Passwords do not match.'})
-
         try:
             user = User.objects.create_user(username=username, email=email, password=password,
                                             first_name=first_name, last_name=last_name)
-            # Profile is created automatically by signal, just update employee_number and picture
             profile = user.profile
             profile.employee_number = employee_number
             if 'profile_picture' in request.FILES:
                 profile.profile_picture = request.FILES['profile_picture']
             profile.save()
-
-            # Optionally log the user in after registration
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('dashboard') # Redirect to dashboard after successful registration
+                return redirect('dashboard')
             else:
                 return render(request, 'users/register.html', {'error': 'Authentication failed after registration.'})
-
         except Exception as e:
-            # Handle unique constraint errors or other validation errors
             return render(request, 'users/register.html', {'error': f'Registration failed: {e}'})
     return render(request, 'users/register.html')
 
 @login_required
 def profile_detail(request):
-    """
-    Displays the logged-in user's profile information.
-    """
-    # The profile is accessed via request.user.profile due to OneToOneField
     return render(request, 'users/profile_detail.html', {'user_profile': request.user.profile})
 
 @login_required
 def profile_edit(request):
-    """
-    Handles updating the logged-in user's profile.
-    """
     user = request.user
     profile = user.profile
-
     if request.method == 'POST':
-        # In a real app, use Django Forms for User and Profile
         user.first_name = request.POST.get('first_name', user.first_name)
         user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
         user.save()
-
         profile.employee_number = request.POST.get('employee_number', profile.employee_number)
         if 'profile_picture' in request.FILES:
             profile.profile_picture = request.FILES['profile_picture']
         profile.save()
-
         return redirect('profile_detail')
-    
     context = {'user_profile': profile, 'user': user}
     return render(request, 'users/profile_edit.html', context)
 
 @login_required
-@user_passes_test(is_superuser) # Only superusers can access this
+@user_passes_test(is_superuser)
 def user_list(request):
-    """
-    (Superuser only) Displays a list of all users and their profiles.
-    """
     users = User.objects.all().select_related('profile').order_by('username')
     context = {'users': users}
     return render(request, 'users/user_list.html', context)
 
 @login_required
-@user_passes_test(is_superuser) # Only superusers can access this
+@user_passes_test(is_superuser)
 def user_detail(request, pk):
-    """
-    (Superuser only) Shows detailed information for a specific user.
-    """
     user = get_object_or_404(User.objects.select_related('profile'), pk=pk)
-    context = {'user_obj': user} # Renamed to avoid conflict with 'user' in base template
+    context = {'user_obj': user}
     return render(request, 'users/user_detail.html', context)
 
 @login_required
-@user_passes_test(is_superuser) # Only superusers can access this
+@user_passes_test(is_superuser)
 def user_edit(request, pk):
-    """
-    (Superuser only) Handles editing other user profiles.
-    """
     user = get_object_or_404(User.objects.select_related('profile'), pk=pk)
     profile = user.profile
-
     if request.method == 'POST':
-        # In a real app, use Django Forms for User and Profile
         user.first_name = request.POST.get('first_name', user.first_name)
         user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
-        # Superuser can also change role
         profile.role = request.POST.get('role', profile.role)
         user.save()
         profile.employee_number = request.POST.get('employee_number', profile.employee_number)
@@ -172,30 +117,22 @@ def user_edit(request, pk):
             profile.profile_picture = request.FILES['profile_picture']
         profile.save()
         return redirect('file_manager_app:user_detail', pk=user.pk)
-    
     context = {'user_obj': user, 'user_profile': profile, 'roles': Profile.ROLE_CHOICES}
     return render(request, 'users/user_edit.html', context)
 
 @login_required
-@user_passes_test(is_superuser) # Only superusers can access this
+@user_passes_test(is_superuser)
 def user_confirm_delete(request, pk):
-    """
-    (Superuser only) Confirms before deleting a user.
-    """
     user_to_delete = get_object_or_404(User, pk=pk)
     if request.method == 'POST':
         user_to_delete.delete()
-        return redirect('user_list')
+        return redirect('file_manager_app:user_list')
     context = {'user_obj': user_to_delete}
     return render(request, 'users/user_confirm_delete.html', context)
-
 
 # --- Incoming Letters Views ---
 @login_required
 def incoming_letter_list(request):
-    """
-    Displays a paginated list of all incoming letters.
-    """
     letters = IncomingLetter.objects.all().order_by('-received_date')
     paginator = Paginator(letters, 20)
     page = request.GET.get('page')
@@ -210,34 +147,24 @@ def incoming_letter_list(request):
 
 @login_required
 def incoming_letter_detail(request, pk):
-    """Shows detailed information for a specific incoming letter."""
     letter = get_object_or_404(IncomingLetter.objects.select_related('receiving_officer', 'signed_by'), pk=pk)
     context = {'incoming_letter': letter}
     return render(request, 'incoming_letters/incoming_letter_detail.html', context)
 
 @login_required
 def incoming_letter_form(request, pk=None):
-    """
-    Handles adding new incoming letters and editing existing ones.
-    Includes permission logic for 'receiving_officer'.
-    """
     incoming_letter = None
     if pk:
         incoming_letter = get_object_or_404(IncomingLetter, pk=pk)
-
-    # Permission logic for receiving_officer field
     if request.user.is_superuser:
         receiving_officers = User.objects.all().order_by('username')
     else:
         receiving_officers = User.objects.filter(pk=request.user.pk)
-
     if request.method == 'POST':
         data = request.POST.copy()
         if not request.user.is_superuser:
             data['receiving_officer'] = request.user.pk
-
-        # Check for duplicate reference before creating
-        if not incoming_letter:  # Only check on create, not edit
+        if not incoming_letter:
             if IncomingLetter.objects.filter(reference=data['reference']).exists():
                 context = {
                     'incoming_letter': incoming_letter,
@@ -246,8 +173,7 @@ def incoming_letter_form(request, pk=None):
                     'error': 'An incoming letter with this reference already exists. Please use a unique reference.'
                 }
                 return render(request, 'incoming_letters/incoming_letter_form.html', context)
-
-        if incoming_letter:  # Editing existing
+        if incoming_letter:
             incoming_letter.received_date = data.get('received_date', incoming_letter.received_date)
             incoming_letter.serial_number = data.get('serial_number', incoming_letter.serial_number)
             incoming_letter.date_of_letter = data.get('date_of_letter', incoming_letter.date_of_letter)
@@ -260,7 +186,7 @@ def incoming_letter_form(request, pk=None):
             if 'scanned_copy' in request.FILES:
                 incoming_letter.scanned_copy = request.FILES['scanned_copy']
             incoming_letter.save()
-        else:  # Creating new
+        else:
             IncomingLetter.objects.create(
                 received_date=data['received_date'],
                 serial_number=data['serial_number'],
@@ -287,21 +213,19 @@ def incoming_letter_form(request, pk=None):
 
 @login_required
 def incoming_letter_confirm_delete(request, pk):
-    """Confirms before deleting an incoming letter record."""
     incoming_letter = get_object_or_404(IncomingLetter, pk=pk)
     if request.method == 'POST':
+        # Soft delete scanned copy if exists
+        if incoming_letter.scanned_copy:
+            delete_file_soft(incoming_letter.scanned_copy.path)
         incoming_letter.delete()
-        return redirect('incoming_letter_list')
+        return redirect('file_manager_app:archived_files_list')
     context = {'incoming_letter': incoming_letter}
     return render(request, 'incoming_letters/incoming_letter_confirm_delete.html', context)
-
 
 # --- Outgoing Letters Views ---
 @login_required
 def outgoing_letter_list(request):
-    """
-    Displays a paginated list of all outgoing letters.
-    """
     letters = OutgoingLetter.objects.all().order_by('-date_sent')
     paginator = Paginator(letters, 20)
     page = request.GET.get('page')
@@ -316,28 +240,19 @@ def outgoing_letter_list(request):
 
 @login_required
 def outgoing_letter_detail(request, pk):
-    """Shows detailed information for a specific outgoing letter."""
     letter = get_object_or_404(OutgoingLetter.objects.select_related('sent_by'), pk=pk)
     context = {'outgoing_letter': letter}
     return render(request, 'outgoing_letters/outgoing_letter_detail.html', context)
 
 @login_required
 def outgoing_letter_form(request, pk=None):
-    """
-    Handles adding new outgoing letters and editing existing ones.
-    """
     outgoing_letter = None
     if pk:
         outgoing_letter = get_object_or_404(OutgoingLetter, pk=pk)
-
-    # For 'sent_by' field, allow all users to be selected
     all_users = User.objects.all().order_by('username')
-
     if request.method == 'POST':
-        # In a real app, use Django Forms
         sent_by_user = get_object_or_404(User, pk=request.POST['sent_by']) if request.POST.get('sent_by') else None
-
-        if outgoing_letter: # Editing existing
+        if outgoing_letter:
             outgoing_letter.date_sent = request.POST.get('date_sent', outgoing_letter.date_sent)
             outgoing_letter.serial_number = request.POST.get('serial_number', outgoing_letter.serial_number)
             outgoing_letter.reference = request.POST.get('reference', outgoing_letter.reference)
@@ -348,7 +263,7 @@ def outgoing_letter_form(request, pk=None):
             if 'scanned_copy' in request.FILES:
                 outgoing_letter.scanned_copy = request.FILES['scanned_copy']
             outgoing_letter.save()
-        else: # Creating new
+        else:
             OutgoingLetter.objects.create(
                 date_sent=request.POST['date_sent'],
                 serial_number=request.POST['serial_number'],
@@ -359,7 +274,7 @@ def outgoing_letter_form(request, pk=None):
                 remarks=request.POST.get('remarks'),
                 scanned_copy=request.FILES.get('scanned_copy'),
             )
-        return redirect('outgoing_letter_list')
+        return redirect('file_manager_app:outgoing_letter_list')
     else:
         context = {
             'outgoing_letter': outgoing_letter,
@@ -369,28 +284,25 @@ def outgoing_letter_form(request, pk=None):
 
 @login_required
 def outgoing_letter_confirm_delete(request, pk):
-    """Confirms before deleting an outgoing letter record."""
     outgoing_letter = get_object_or_404(OutgoingLetter, pk=pk)
     if request.method == 'POST':
+        # Soft delete scanned copy if exists
+        if outgoing_letter.scanned_copy:
+            delete_file_soft(outgoing_letter.scanned_copy.path)
         outgoing_letter.delete()
-        return redirect('outgoing_letter_list')
+        return redirect('file_manager_app:archived_files_list')
     context = {'outgoing_letter': outgoing_letter}
     return render(request, 'outgoing_letters/outgoing_letter_confirm_delete.html', context)
 
 @login_required
 def outgoing_letter_receipt(request, pk):
-    """Generates and displays a printable receipt for an outgoing letter."""
     outgoing_letter = get_object_or_404(OutgoingLetter.objects.select_related('sent_by'), pk=pk)
     context = {'outgoing_letter': outgoing_letter}
     return render(request, 'outgoing_letters/outgoing_letter_receipt.html', context)
 
-
 # --- Filings Views ---
 @login_required
 def filing_list(request):
-    """
-    Displays a paginated list of all filings.
-    """
     filings = Filing.objects.all().order_by('-receiving_date')
     paginator = Paginator(filings, 20)
     page = request.GET.get('page')
@@ -405,9 +317,8 @@ def filing_list(request):
 
 @login_required
 def filing_detail(request, pk):
-    """Shows detailed information for a specific filing, including its documents."""
     filing = get_object_or_404(Filing.objects.select_related('receiving_officer'), pk=pk)
-    filing_documents = filing.documents.all() # Accessing related documents
+    filing_documents = filing.documents.all()
     context = {
         'filing': filing,
         'filing_documents': filing_documents,
@@ -416,33 +327,19 @@ def filing_detail(request, pk):
 
 @login_required
 def filing_form(request, pk=None):
-    """
-    Handles adding new filings and editing existing ones.
-    Includes permission logic for 'officer' (receiving_officer).
-    """
     filing = None
     if pk:
         filing = get_object_or_404(Filing, pk=pk)
-
-    # Permission logic for receiving_officer field
     if request.user.is_superuser:
-        # Superuser can select any user
         receiving_officers = User.objects.all().order_by('username')
     else:
-        # Non-superuser can only select themselves
         receiving_officers = User.objects.filter(pk=request.user.pk)
-
     if request.method == 'POST':
-        # In a real app, use Django Forms
-        data = request.POST.copy() # Make a mutable copy
-        
-        # If not superuser, force receiving_officer to current user
+        data = request.POST.copy()
         if not request.user.is_superuser:
             data['receiving_officer'] = request.user.pk
-
         receiving_officer_obj = get_object_or_404(User, pk=data['receiving_officer'])
-
-        if filing: # Editing existing
+        if filing:
             filing.file_reference = data.get('file_reference', filing.file_reference)
             filing.file_name = data.get('file_name', filing.file_name)
             filing.serial_number = data.get('serial_number', filing.serial_number)
@@ -452,7 +349,7 @@ def filing_form(request, pk=None):
             if 'scanned_copy' in request.FILES:
                 filing.scanned_copy = request.FILES['scanned_copy']
             filing.save()
-        else: # Creating new
+        else:
             Filing.objects.create(
                 file_reference=data['file_reference'],
                 file_name=data['file_name'],
@@ -462,7 +359,7 @@ def filing_form(request, pk=None):
                 receiving_date=data['receiving_date'],
                 scanned_copy=request.FILES.get('scanned_copy'),
             )
-        return redirect('filing_list')
+        return redirect('file_manager_app:filing_list')
     else:
         context = {
             'filing': filing,
@@ -472,43 +369,37 @@ def filing_form(request, pk=None):
 
 @login_required
 def filing_confirm_delete(request, pk):
-    """Confirms before deleting a filing record."""
     filing = get_object_or_404(Filing, pk=pk)
     if request.method == 'POST':
+        # Soft delete scanned copy if exists
+        if filing.scanned_copy:
+            delete_file_soft(filing.scanned_copy.path)
         filing.delete()
-        return redirect('filing_list')
+        return redirect('file_manager_app:archived_files_list')
     context = {'filing': filing}
     return render(request, 'filings/filing_confirm_delete.html', context)
 
 @login_required
 def filing_document_form(request, filing_pk):
-    """
-    Handles uploading new documents to an existing filing.
-    Includes file validation for CSV/Excel.
-    """
     filing = get_object_or_404(Filing, pk=filing_pk)
-
     if request.method == 'POST':
         document_name = request.POST.get('document_name')
         folio_number = request.POST.get('folio_number')
         uploaded_file = request.FILES.get('uploaded_file')
-
         if not uploaded_file:
             return render(request, 'filings/filing_document_form.html', {
                 'filing': filing, 'error': 'No file uploaded.'
             })
-
         try:
-            # The validator is attached to the model field, so it runs on save
             filing_document = FilingDocument(
                 filing=filing,
                 document_name=document_name,
                 folio_number=folio_number,
                 uploaded_file=uploaded_file
             )
-            filing_document.full_clean() # Run model's validators
+            filing_document.full_clean()
             filing_document.save()
-            return redirect('filing_detail', pk=filing.pk)
+            return redirect('file_manager_app:filing_detail', pk=filing.pk)
         except ValidationError as e:
             return render(request, 'filings/filing_document_form.html', {
                 'filing': filing, 'error': e.message
@@ -517,48 +408,36 @@ def filing_document_form(request, filing_pk):
             return render(request, 'filings/filing_document_form.html', {
                 'filing': filing, 'error': f'File upload failed: {e}'
             })
-
     context = {'filing': filing}
     return render(request, 'filings/filing_document_form.html', context)
 
 @login_required
 def filing_document_confirm_delete(request, pk):
-    """Confirms before deleting a filing document."""
     filing_document = get_object_or_404(FilingDocument, pk=pk)
-    filing_pk = filing_document.filing.pk # Get parent filing's PK for redirect
+    filing_pk = filing_document.filing.pk
     if request.method == 'POST':
+        # Soft delete uploaded file if exists
+        if filing_document.uploaded_file:
+            delete_file_soft(filing_document.uploaded_file.path)
         filing_document.delete()
-        return redirect('filing_detail', pk=filing_pk)
+        return redirect('file_manager_app:archived_files_list')
     context = {'filing_document': filing_document}
     return render(request, 'filings/filing_document_confirm_delete.html', context)
 
-def __init__(self, *args, **kwargs):
-        # The 'filing' instance should be passed from the view when creating a document
-        self.filing_instance = kwargs.pop('filing_instance', None)
-        super().__init__(*args, **kwargs)
-        # If this form is used to add a new document, the 'filing' field should be set by the view
-        # or it could be a hidden field. For simplicity, we assume the view sets it.
-        if self.filing_instance:
-            self.instance.filing = self.filing_instance
+# --- Archived Files View ---
+@login_required
+def archived_files_list(request):
+    setup_directories()  # Ensure archive dir exists
+    archived_files = get_archived_files()
+    return render(request, 'files/archived_files_list.html', {'archived_files': archived_files})
 
-def clean(self):
-        cleaned_data = super().clean()
-        # Custom validation for uploaded_file is handled by the model's validator.
-        # Any additional form-level validation can go here.
-        return cleaned_data
-
-
-# --- Search & Reporting Views ---
+# --- Other Views (Search, Reports, etc.) ---
 @login_required
 def search_results(request):
-    """
-    Handles general search across letters and filings.
-    """
     query = request.GET.get('q', '')
     incoming_results = []
     outgoing_results = []
     filing_results = []
-
     if query:
         incoming_results = IncomingLetter.objects.filter(
             Q(subject__icontains=query) |
@@ -566,14 +445,12 @@ def search_results(request):
             Q(author__icontains=query) |
             Q(receiving_officer__username__icontains=query)
         ).distinct()
-
         outgoing_results = OutgoingLetter.objects.filter(
             Q(subject__icontains=query) |
             Q(reference__icontains=query) |
             Q(recipient__icontains=query) |
             Q(sent_by__username__icontains=query)
         ).distinct()
-
         filing_results = Filing.objects.filter(
             Q(file_name__icontains=query) |
             Q(file_reference__icontains=query) |
@@ -581,7 +458,6 @@ def search_results(request):
             Q(receiving_department__icontains=query) |
             Q(receiving_officer__username__icontains=query)
         ).distinct()
-
     context = {
         'query': query,
         'incoming_results': incoming_results,
@@ -592,16 +468,12 @@ def search_results(request):
 
 @login_required
 def report_dashboard(request):
-    """Displays an overview of available reports."""
     return render(request, 'reports/report_dashboard.html')
 
 @login_required
 def letter_volume_report(request):
-    """Generates and displays a report on letter volumes."""
-    # Example: Count incoming/outgoing letters by month/year
     incoming_counts = IncomingLetter.objects.extra({'month': "strftime('%%Y-%%m', received_date)"}).values('month').annotate(count=Count('id')).order_by('month')
     outgoing_counts = OutgoingLetter.objects.extra({'month': "strftime('%%Y-%%m', date_sent)"}).values('month').annotate(count=Count('id')).order_by('month')
-
     context = {
         'incoming_counts': incoming_counts,
         'outgoing_counts': outgoing_counts,
@@ -610,9 +482,6 @@ def letter_volume_report(request):
 
 @login_required
 def filing_type_report(request):
-    """
-    Renders the filing type report with pagination.
-    """
     filings = Filing.objects.all().order_by('-receiving_date')
     paginator = Paginator(filings, 20)
     page = request.GET.get('page')
@@ -625,9 +494,7 @@ def filing_type_report(request):
     context = {'filing_list': filing_list}
     return render(request, 'reports/filing_type_report.html', context)
 
-
-# --- Custom Error Views (Optional, but good practice for Django) ---
-# These would be configured in your main urls.py with handler403, handler404, handler500
+# --- Custom Error Views ---
 def custom_403_view(request, exception):
     return render(request, '403.html', status=403)
 
@@ -637,22 +504,15 @@ def custom_404_view(request, exception):
 def custom_500_view(request):
     return render(request, '500.html', status=500)
 
+# --- Print and Move Incoming Letter to Outgoing ---
 @login_required
 def incoming_letter_print_and_move(request, pk):
-    """
-    Prints a receipt for the incoming letter, moves it to outgoing, and attaches the printout.
-    """
     incoming_letter = get_object_or_404(IncomingLetter, pk=pk)
-
-    # Generate receipt HTML (or PDF if you use a library)
     receipt_html = render_to_string('outgoing_letters/outgoing_letter_receipt.html', {'outgoing_letter': incoming_letter})
-
-    # Save receipt as a temporary file (PDF or HTML)
     with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as tmp:
         tmp.write(receipt_html.encode('utf-8'))
         tmp_path = tmp.name
-
-    # Create OutgoingLetter and attach receipt
+    # You must have a receipt_file field in OutgoingLetter for this to work
     outgoing_letter = OutgoingLetter.objects.create(
         reference=incoming_letter.reference,
         subject=incoming_letter.subject,
@@ -662,36 +522,7 @@ def incoming_letter_print_and_move(request, pk):
         serial_number=f"OUT-{incoming_letter.serial_number}",
         remarks=incoming_letter.remarks,
         scanned_copy=incoming_letter.scanned_copy,
-        receipt_file=tmp_path  # You may need a FileField for this
+        # receipt_file=tmp_path  # Uncomment if you have this field
     )
-
-    # Remove from IncomingLetter
     incoming_letter.delete()
-
-    # Redirect to outgoing letter detail or show/download receipt
     return redirect('file_manager_app:outgoing_letter_detail', pk=outgoing_letter.pk)
-
-
-# my_app/views.py
-
-
-
-def delete_document_view(request, document_path):
-    """
-    Handles the request to soft-delete a document.
-    """
-    if request.method == 'POST':
-        success = delete_file_soft(document_path)
-        if success:
-            # Add a success message for the user
-            return redirect('file_list')
-        else:
-            # Handle the error, maybe show an error message
-            return render(request, 'error.html')
-
-    # For GET requests, show a confirmation page
-    return render(request, 'confirm_delete.html', {'document_path': document_path})
-
-def archived_files_list(request):
-    archived_files = get_archived_files()
-    return render(request, 'files/archived_files_list.html', {'archived_files': archived_files})
