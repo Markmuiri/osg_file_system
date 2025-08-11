@@ -42,28 +42,19 @@ def delete_file_soft(file_path):
         return False
 
 def restore_file(archived_file_name):
-    """
-    Restores a file from the archive directory to its original location.
-    Note: This example assumes you know the original name, but a more robust
-    system would store original paths in a database.
-    """
+    import os, shutil
     archive_path = os.path.join(ARCHIVE_DIR, archived_file_name)
     if not os.path.exists(archive_path):
         print(f"Error: Archived file '{archived_file_name}' not found.")
         return False
 
-    # Attempt to reconstruct the original file name (before timestamp and _ARCHIVED)
-    match = re.match(r"^(.*)_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_ARCHIVED(\..+)$", archived_file_name)
-    if match:
-        original_file_name = match.group(1) + match.group(2)
-    else:
-        original_file_name = archived_file_name  # fallback
-
-    original_path = os.path.join(BASE_DIR, original_file_name)
-
+    # Restore to a 'restored' directory for safety
+    restored_dir = os.path.join(BASE_DIR, 'restored')
+    os.makedirs(restored_dir, exist_ok=True)
+    restored_path = os.path.join(restored_dir, archived_file_name)
     try:
-        shutil.move(archive_path, original_path)
-        print(f"File '{archived_file_name}' restored to '{original_path}'.")
+        shutil.move(archive_path, restored_path)
+        print(f"File '{archived_file_name}' restored to '{restored_path}'.")
         return True
     except Exception as e:
         print(f"Error restoring file: {e}")
