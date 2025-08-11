@@ -51,4 +51,5 @@ urlpatterns = [
 
     # Archived Files
     path('files/archived/', views.archived_files_list, name='archived_files_list'),
+    path('files/archived/<int:pk>/restore/', views.restore_archived_file, name='restore_archived_file'),
 ]
