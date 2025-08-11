@@ -12,8 +12,8 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 import tempfile
 
-from .file_utils import delete_file_soft, get_archived_files, setup_directories
-from .models import Profile, IncomingLetter, OutgoingLetter, Filing, FilingDocument
+from .file_utils import delete_file_soft, get_archived_files, setup_directories, restore_file
+from .models import Profile, IncomingLetter, OutgoingLetter, Filing, FilingDocument, ArchivedFile
 
 # --- Helper for Superuser Check ---
 def is_superuser(user):
@@ -428,8 +428,26 @@ def filing_document_confirm_delete(request, pk):
 @login_required
 def archived_files_list(request):
     setup_directories()  # Ensure archive dir exists
-    archived_files = get_archived_files()
-    return render(request, 'files/archived_files_list.html', {'archived_files': archived_files})
+    archived_incoming = ArchivedFile.objects.filter(category='incoming', restored=False)
+    archived_outgoing = ArchivedFile.objects.filter(category='outgoing', restored=False)
+    archived_filing = ArchivedFile.objects.filter(category='filing', restored=False)
+    context = {
+        'archived_incoming': archived_incoming,
+        'archived_outgoing': archived_outgoing,
+        'archived_filing': archived_filing,
+    }
+    return render(request, 'files/archived_files_list.html', context)
+
+@login_required
+def restore_archived_file(request, pk):
+    archived_file = get_object_or_404(ArchivedFile, pk=pk, restored=False)
+    if request.method == 'POST':
+        success = restore_file(archived_file.archived_name)
+        if success:
+            archived_file.restored = True
+            archived_file.save()
+        return redirect('file_manager_app:archived_files_list')
+    return render(request, 'files/restore_confirm.html', {'archived_file': archived_file})
 
 # --- Other Views (Search, Reports, etc.) ---
 @login_required
