@@ -47,8 +47,8 @@
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <a href="{% url 'file_manager_app:outgoing_letter_detail' letter.pk %}" class="text-blue-600 hover:text-blue-900 mr-4">View</a>
                             <a href="{% url 'file_manager_app:outgoing_letter_edit' letter.pk %}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
-                            <a href="{% url 'file_manager_app:outgoing_letter_confirm_delete' letter.pk %}" class="text-red-600 hover:text-red-900 mr-4">Delete</a>
-                            <a href="{% url 'file_manager_app:outgoing_letter_receipt' letter.pk %}" target="_blank" class="text-green-600 hover:text-green-900">Receipt</a>
+                            <a href="{% url 'file_manager_app:outgoing_letter_confirm_delete' letter.pk %}" class="text-red-600 hover:text-red-900 mr-4">Archive</a>
+                            <!-- <a href="{% url 'file_manager_app:outgoing_letter_receipt' letter.pk %}" target="_blank" class="text-green-600 hover:text-green-900">Receipt</a> -->
                         </td>
                     </tr>
                     {% endfor %}
