@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'osg_project.file_manager_app.apps.FileManagerAppConfig',  # <-- this is the correct line
+    'osg_project.file_manager_app.apps.FileManagerAppConfig',
+    'payments_app',
 ]
 
 MIDDLEWARE = [
