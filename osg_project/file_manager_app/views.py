@@ -136,6 +136,33 @@ class RefreshTokenView(TokenRefreshView):
     """
     pass
 
+# --- Function-based Views for Authentication ---
+
+def login_view(request):
+    """
+    Custom login view for the file manager app.
+    """
+    error = None
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('index')
+        else:
+            error = 'Invalid username or password.'
+    return render(request, 'registration/login.html', {'error': error})
+
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+def logout_view(request):
+    """
+    Logs out the user and redirects to the login page.
+    """
+    logout(request)
+    return redirect('file_manager_app:login')
 
 # --- General Application Views (Function-based views are appropriate here) ---
 
@@ -306,8 +333,8 @@ class UserRegisterView(CreateView):
     """
     model = User
     form_class = CustomUserCreationForm
-    template_name = 'users/register.html'
-    success_url = reverse_lazy('login') # Assuming you have a login view
+    template_name = 'registration/register.html'
+    success_url = reverse_lazy('index')  # Redirect to index after registration
 
     def form_valid(self, form):
         response = super().form_valid(form)

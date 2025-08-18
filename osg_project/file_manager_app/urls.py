@@ -1,19 +1,15 @@
+# osg_project/file_manager_app/urls.py
+
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 app_name = 'file_manager_app'
 
 urlpatterns = [
-
-    
-    # API endpoints for JWT authentication
-    path('token/obtain/', views.ObtainTokenView.as_view(), name='token-obtain'),
-    path('token/refresh/', views.RefreshTokenView.as_view(), name='token-refresh'),
-
-    # Dashboard
-    path('', views.dashboard, name='dashboard'),
-
-    # User management (all class-based views)
+    # --- User Authentication and Management ---
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path('register/', views.UserRegisterView.as_view(), name='register'),
     path('profile/', views.ProfileDetailView.as_view(), name='profile_detail'),
     path('profile/edit/', views.ProfileEditView.as_view(), name='profile_edit'),
@@ -21,6 +17,13 @@ urlpatterns = [
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='user_detail'),
     path('users/<int:pk>/edit/', views.UserEditView.as_view(), name='user_edit'),
     path('users/<int:pk>/delete/confirm/', views.UserDeleteView.as_view(), name='user_confirm_delete'),
+    
+    # API endpoints for JWT authentication
+    path('token/obtain/', views.ObtainTokenView.as_view(), name='token-obtain'),
+    path('token/refresh/', views.RefreshTokenView.as_view(), name='token-refresh'),
+
+    # Dashboard
+    path('', views.dashboard, name='dashboard'),
 
     # Incoming Letters (all class-based views)
     path('letters/incoming/', views.IncomingLetterListView.as_view(), name='incoming_letter_list'),

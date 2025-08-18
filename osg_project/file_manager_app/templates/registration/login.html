@@ -14,7 +14,7 @@
             </div>
         {% endif %}
 
-        <form method="post" action="{% url 'login' %}" class="space-y-6">
+        <form method="post">
             {% csrf_token %}
 
             <!-- Username Field -->
@@ -39,7 +39,7 @@
         </form>
 
         <p class="text-center text-sm text-gray-600 mt-6">
-            Don't have an account? <a href="{% url 'register' %}" class="text-blue-600 hover:underline font-medium">Register here</a>
+            Don't have an account? <a href="{% url 'file_manager_app:register' %}" class="text-blue-600 hover:underline font-medium">Register here</a>
         </p>
         <p class="text-center text-sm text-gray-600 mt-2">
             <a href="#" class="text-blue-600 hover:underline font-medium">Forgot password?</a>

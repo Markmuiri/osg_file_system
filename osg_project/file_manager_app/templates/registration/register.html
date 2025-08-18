@@ -14,7 +14,7 @@
             </div>
         {% endif %}
 
-        <form method="post" action="{% url 'register' %}" enctype="multipart/form-data" class="space-y-6">
+        <form method="post" action="{% url 'file_manager_app:register' %}" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -89,7 +89,7 @@
         </form>
 
         <p class="text-center text-sm text-gray-600 mt-6">
-            Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:underline font-medium">Login here</a>
+            Already have an account? <a href="{% url 'file_manager_app:login' %}" class="text-blue-600 hover:underline font-medium">Login here</a>
         </p>
     </div>
 </div>
