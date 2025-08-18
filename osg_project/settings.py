@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'osg_project.file_manager_app.apps.FileManagerAppConfig',
-    'payments_app',
+    'osg_project.payments_app.apps.PaymentsAppConfig',  # Use the app config class
 ]
 
 MIDDLEWARE = [
@@ -57,7 +57,9 @@ ROOT_URLCONF = 'osg_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'templates',  # <-- Use Pathlib style
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

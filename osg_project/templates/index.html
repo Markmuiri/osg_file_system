@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSG Project Hub</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+    <div class="container mx-auto p-4 md:p-8">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-extrabold text-gray-900 leading-tight mb-2">
+                OSG Project Hub
+            </h1>
+            <p class="text-lg text-gray-600">
+                Select an application to get started.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <!-- App Card 1: File Manager -->
+            <div class="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                <div class="flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-blue-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 17V7a4 4 0 0 1 4-4h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8a4 4 0 0 1-4-4Z" />
+                        <path d="M8 17a4 4 0 0 1 4 4h6a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H8a4 4 0 0 0-4 4v2" />
+                        <path d="M12 17v-2" />
+                    </svg>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">
+                        File Manager
+                    </h2>
+                    <p class="text-gray-500 text-center mb-6">
+                        Manage incoming and outgoing letters, filings, and archived documents.
+                    </p>
+                    <a href="{% url 'file_manager_app:dashboard' %}" class="w-full text-center bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors duration-200">
+                        Open File Manager
+                    </a>
+                </div>
+            </div>
+
+            <!-- App Card 2: Placeholder for a future app -->
+            <div class="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                <div class="flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-emerald-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                        <path d="M7 15h3M14 15h3M7 9h10" />
+                    </svg>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">
+                        Future App
+                    </h2>
+                    <p class="text-gray-500 text-center mb-6">
+                        A new application to be added to the project, coming soon.
+                    </p>
+                    <button class="w-full text-center bg-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-xl cursor-not-allowed">
+                        Coming Soon
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
