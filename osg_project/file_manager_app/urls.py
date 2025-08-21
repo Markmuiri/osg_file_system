@@ -17,7 +17,7 @@ urlpatterns = [
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='user_detail'),
     path('users/<int:pk>/edit/', views.UserEditView.as_view(), name='user_edit'),
     path('users/<int:pk>/delete/confirm/', views.UserDeleteView.as_view(), name='user_confirm_delete'),
-    
+
     # API endpoints for JWT authentication
     path('token/obtain/', views.ObtainTokenView.as_view(), name='token-obtain'),
     path('token/refresh/', views.RefreshTokenView.as_view(), name='token-refresh'),
@@ -25,32 +25,31 @@ urlpatterns = [
     # Dashboard
     path('', views.dashboard, name='dashboard'),
 
-    # Incoming Letters (all class-based views)
-    path('letters/incoming/', views.IncomingLetterListView.as_view(), name='incoming_letter_list'),
-    path('letters/incoming/add/', views.IncomingLetterCreateView.as_view(), name='incoming_letter_form'),
-    path('letters/incoming/<int:pk>/', views.IncomingLetterDetailView.as_view(), name='incoming_letter_detail'),
-    path('letters/incoming/<int:pk>/edit/', views.IncomingLetterUpdateView.as_view(), name='incoming_letter_edit'),
-    path('letters/incoming/<int:pk>/delete/confirm/', views.IncomingLetterDeleteView.as_view(), name='incoming_letter_confirm_delete'),
+    # Incoming Letters (function-based views)
+    path('letters/incoming/', views.incoming_letter_list, name='incoming_letter_list'),
+    path('letters/incoming/add/', views.incoming_letter_form, name='incoming_letter_form'),
+    path('letters/incoming/<int:pk>/', views.incoming_letter_detail, name='incoming_letter_detail'),
+    path('letters/incoming/<int:pk>/edit/', views.incoming_letter_form, name='incoming_letter_edit'),
+    path('letters/incoming/<int:pk>/delete/confirm/', views.incoming_letter_confirm_delete, name='incoming_letter_confirm_delete'),
     path('letters/incoming/<int:pk>/print-and-move/', views.incoming_letter_print_and_move, name='incoming_letter_print_and_move'),
 
-    # Outgoing Letters (all class-based views)
-    path('letters/outgoing/', views.OutgoingLetterListView.as_view(), name='outgoing_letter_list'),
-    path('letters/outgoing/add/', views.OutgoingLetterCreateView.as_view(), name='outgoing_letter_form'),
-    path('letters/outgoing/<int:pk>/', views.OutgoingLetterDetailView.as_view(), name='outgoing_letter_detail'),
-    path('letters/outgoing/<int:pk>/edit/', views.OutgoingLetterUpdateView.as_view(), name='outgoing_letter_edit'),
-    path('letters/outgoing/<int:pk>/delete/confirm/', views.OutgoingLetterDeleteView.as_view(), name='outgoing_letter_confirm_delete'),
-    # If you have a receipt view as a function-based view, keep as is:
+    # Outgoing Letters (function-based views)
+    path('letters/outgoing/', views.outgoing_letter_list, name='outgoing_letter_list'),
+    path('letters/outgoing/add/', views.outgoing_letter_form, name='outgoing_letter_form'),
+    path('letters/outgoing/<int:pk>/', views.outgoing_letter_detail, name='outgoing_letter_detail'),
+    path('letters/outgoing/<int:pk>/edit/', views.outgoing_letter_form, name='outgoing_letter_edit'),
+    path('letters/outgoing/<int:pk>/delete/confirm/', views.outgoing_letter_confirm_delete, name='outgoing_letter_confirm_delete'),
     path('letters/outgoing/<int:pk>/receipt/', views.outgoing_letter_receipt, name='outgoing_letter_receipt'),
 
-    # Filings (all class-based views)
-    path('filings/', views.FilingListView.as_view(), name='filing_list'),
-    path('filings/add/', views.FilingCreateView.as_view(), name='filing_form'),
-    path('filings/<int:pk>/', views.FilingDetailView.as_view(), name='filing_detail'),
-    path('filings/<int:pk>/edit/', views.FilingUpdateView.as_view(), name='filing_edit'),
-    path('filings/<int:pk>/delete/confirm/', views.FilingDeleteView.as_view(), name='filing_confirm_delete'),
+    # Filings (function-based views)
+    path('filings/', views.filing_list, name='filing_list'),
+    path('filings/add/', views.filing_form, name='filing_form'),
+    path('filings/<int:pk>/', views.filing_detail, name='filing_detail'),
+    path('filings/<int:pk>/edit/', views.filing_form, name='filing_edit'),
+    path('filings/<int:pk>/delete/confirm/', views.filing_confirm_delete, name='filing_confirm_delete'),
 
-    # Filing Documents (all class-based views)
-    path('filings/<int:filing_pk>/documents/add/', views.FilingDocumentCreateView.as_view(), name='filing_document_form'),
+    # Filing Documents (function-based and class-based views)
+    path('filings/<int:filing_pk>/documents/add/', views.filing_document_form, name='filing_document_form'),
     path('filing-documents/<int:pk>/delete/confirm/', views.FilingDocumentDeleteView.as_view(), name='filing_document_confirm_delete'),
 
     # Search & Reports (function-based views)
@@ -59,7 +58,7 @@ urlpatterns = [
     path('reports/letter-volume/', views.letter_volume_report, name='letter_volume_report'),
     path('reports/filing-type/', views.filing_type_report, name='filing_type_report'),
 
-    # Archived Files (class-based and function-based views)
-    path('files/archived/', views.ArchivedFilesListView.as_view(), name='archived_files_list'),
-    path('files/archived/<int:pk>/restore/', views.RestoreArchivedFileView.as_view(), name='restore_archived_file'),
+    # Archived Files (function-based views)
+    path('files/archived/', views.archived_files_list, name='archived_files_list'),
+    path('files/archived/<int:pk>/restore/', views.restore_archived_file, name='restore_archived_file'),
 ]

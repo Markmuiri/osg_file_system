@@ -415,235 +415,305 @@ class UserDeleteView(SuperuserRequiredMixin, DeleteView):
 # -----------------------------------------------------------------
 # --- Incoming Letters Views (Class-Based Views) ---
 # -----------------------------------------------------------------
-class IncomingLetterListView(ListView):
-    """
-    Lists all incoming letters.
-    """
-    model = IncomingLetter
-    template_name = 'incoming_letters/incoming_letter_list.html'
-    context_object_name = 'letter_list'
-    paginate_by = 20
+@login_required
+def incoming_letter_list(request):
+    letters = IncomingLetter.objects.all().order_by('-received_date')
+    paginator = Paginator(letters, 20)
+    page = request.GET.get('page')
+    try:
+        letter_list = paginator.page(page)
+    except PageNotAnInteger:
+        letter_list = paginator.page(1)
+    except EmptyPage:
+        letter_list = paginator.page(paginator.num_pages)
+    context = {'letter_list': letter_list}
+    return render(request, 'incoming_letters/incoming_letter_list.html', context)
 
+@login_required
+def incoming_letter_detail(request, pk):
+    letter = get_object_or_404(IncomingLetter.objects.select_related('receiving_officer', 'signed_by'), pk=pk)
+    context = {'incoming_letter': letter}
+    return render(request, 'incoming_letters/incoming_letter_detail.html', context)
 
-class IncomingLetterDetailView(DetailView):
-    """
-    Displays the details of an incoming letter.
-    """
-    model = IncomingLetter
-    template_name = 'incoming_letters/incoming_letter_detail.html'
-    context_object_name = 'incoming_letter'
+@login_required
+def incoming_letter_form(request, pk=None):
+    incoming_letter = None
+    if pk:
+        incoming_letter = get_object_or_404(IncomingLetter, pk=pk)
+    if request.user.is_superuser:
+        receiving_officers = User.objects.all().order_by('username')
+    else:
+        receiving_officers = User.objects.filter(pk=request.user.pk)
+    if request.method == 'POST':
+        data = request.POST.copy()
+        if not request.user.is_superuser:
+            data['receiving_officer'] = request.user.pk
+        if not incoming_letter:
+            if IncomingLetter.objects.filter(reference=data['reference']).exists():
+                context = {
+                    'incoming_letter': incoming_letter,
+                    'receiving_officers': receiving_officers,
+                    'all_users': User.objects.all().order_by('username'),
+                    'error': 'An incoming letter with this reference already exists. Please use a unique reference.'
+                }
+                return render(request, 'incoming_letters/incoming_letter_form.html', context)
+        if incoming_letter:
+            incoming_letter.received_date = data.get('received_date', incoming_letter.received_date)
+            incoming_letter.serial_number = data.get('serial_number', incoming_letter.serial_number)
+            incoming_letter.date_of_letter = data.get('date_of_letter', incoming_letter.date_of_letter)
+            incoming_letter.reference = data.get('reference', incoming_letter.reference)
+            incoming_letter.subject = data.get('subject', incoming_letter.subject)
+            incoming_letter.author = data.get('author', incoming_letter.author)
+            incoming_letter.receiving_officer = get_object_or_404(User, pk=data['receiving_officer'])
+            incoming_letter.remarks = data.get('remarks', incoming_letter.remarks)
+            incoming_letter.sender = data.get('sender', incoming_letter.sender)
+            if 'scanned_copy' in request.FILES:
+                incoming_letter.scanned_copy = request.FILES['scanned_copy']
+            incoming_letter.save()
+        else:
+            IncomingLetter.objects.create(
+                received_date=data['received_date'],
+                serial_number=data['serial_number'],
+                date_of_letter=data['date_of_letter'],
+                reference=data['reference'],
+                subject=data['subject'],
+                author=data['author'],
+                receiving_officer=get_object_or_404(User, pk=data['receiving_officer']),
+                remarks=data.get('remarks'),
+                scanned_copy=request.FILES.get('scanned_copy'),
+                signed_by=get_object_or_404(User, pk=data['signed_by']) if data.get('signed_by') else None,
+                signed_at=data.get('signed_at'),
+                sender=data.get('sender'),
+                is_actioned=data.get('is_actioned') == 'on',
+            )
+        return redirect('file_manager_app:incoming_letter_list')
+    else:
+        context = {
+            'incoming_letter': incoming_letter,
+            'receiving_officers': receiving_officers,
+            'all_users': User.objects.all().order_by('username'),
+        }
+        return render(request, 'incoming_letters/incoming_letter_form.html', context)
 
-
-class IncomingLetterCreateView(CreateView):
-    """
-    Handles the creation of a new incoming letter.
-    """
-    model = IncomingLetter
-    form_class = IncomingLetterForm
-    template_name = 'incoming_letters/incoming_letter_form.html'
-    success_url = reverse_lazy('file_manager_app:incoming_letter_list')
-
-    def form_valid(self, form):
-        # Attach the current user as the receiving officer automatically
-        form.instance.receiving_officer = self.request.user
-        messages.success(self.request, 'Incoming letter created successfully.')
-        return super().form_valid(form)
-
-
-class IncomingLetterUpdateView(UpdateView):
-    """
-    Handles the update of an existing incoming letter.
-    """
-    model = IncomingLetter
-    form_class = IncomingLetterForm
-    template_name = 'incoming_letters/incoming_letter_form.html'
-    success_url = reverse_lazy('file_manager_app:incoming_letter_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Incoming letter updated successfully.')
-        return super().form_valid(form)
-
-
-class IncomingLetterDeleteView(DeleteView):
-    """
-    Handles the deletion of an incoming letter.
-    Note: The `delete_file_soft` is called from the `models.py` `pre_delete` signal.
-    """
-    model = IncomingLetter
-    template_name = 'incoming_letters/incoming_letter_confirm_delete.html'
-    context_object_name = 'incoming_letter'
-    success_url = reverse_lazy('file_manager_app:archived_files_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Incoming letter deleted and archived successfully.')
-        return super().form_valid(form)
+@login_required
+def incoming_letter_confirm_delete(request, pk):
+    incoming_letter = get_object_or_404(IncomingLetter, pk=pk)
+    if request.method == 'POST':
+        # Soft delete scanned copy if exists
+        if incoming_letter.scanned_copy:
+            delete_file_soft(incoming_letter.scanned_copy.path)
+        incoming_letter.delete()
+        return redirect('file_manager_app:archived_files_list')
+    context = {'incoming_letter': incoming_letter}
+    return render(request, 'incoming_letters/incoming_letter_confirm_delete.html', context)
 
 
 # -----------------------------------------------------------------
 # --- Outgoing Letters Views (Class-Based Views) ---
 # -----------------------------------------------------------------
-class OutgoingLetterListView(ListView):
-    """
-    Lists all outgoing letters.
-    """
-    model = OutgoingLetter
-    template_name = 'outgoing_letters/outgoing_letter_list.html'
-    context_object_name = 'letter_list'
-    paginate_by = 20
+@login_required
+def outgoing_letter_list(request):
+    letters = OutgoingLetter.objects.all().order_by('-date_sent')
+    paginator = Paginator(letters, 20)
+    page = request.GET.get('page')
+    try:
+        letter_list = paginator.page(page)
+    except PageNotAnInteger:
+        letter_list = paginator.page(1)
+    except EmptyPage:
+        letter_list = paginator.page(paginator.num_pages)
+    context = {'letter_list': letter_list}
+    return render(request, 'outgoing_letters/outgoing_letter_list.html', context)
 
+@login_required
+def outgoing_letter_detail(request, pk):
+    letter = get_object_or_404(OutgoingLetter.objects.select_related('sent_by'), pk=pk)
+    context = {'outgoing_letter': letter}
+    return render(request, 'outgoing_letters/outgoing_letter_detail.html', context)
 
-class OutgoingLetterDetailView(DetailView):
-    """
-    Displays the details of an outgoing letter.
-    """
-    model = OutgoingLetter
-    template_name = 'outgoing_letters/outgoing_letter_detail.html'
-    context_object_name = 'outgoing_letter'
+@login_required
+def outgoing_letter_form(request, pk=None):
+    outgoing_letter = None
+    if pk:
+        outgoing_letter = get_object_or_404(OutgoingLetter, pk=pk)
+    all_users = User.objects.all().order_by('username')
+    if request.method == 'POST':
+        sent_by_user = get_object_or_404(User, pk=request.POST['sent_by']) if request.POST.get('sent_by') else None
+        if outgoing_letter:
+            outgoing_letter.date_sent = request.POST.get('date_sent', outgoing_letter.date_sent)
+            outgoing_letter.serial_number = request.POST.get('serial_number', outgoing_letter.serial_number)
+            outgoing_letter.reference = request.POST.get('reference', outgoing_letter.reference)
+            outgoing_letter.subject = request.POST.get('subject', outgoing_letter.subject)
+            outgoing_letter.recipient = request.POST.get('recipient', outgoing_letter.recipient)
+            outgoing_letter.sent_by = sent_by_user
+            outgoing_letter.remarks = request.POST.get('remarks', outgoing_letter.remarks)
+            if 'scanned_copy' in request.FILES:
+                outgoing_letter.scanned_copy = request.FILES['scanned_copy']
+            outgoing_letter.save()
+        else:
+            OutgoingLetter.objects.create(
+                date_sent=request.POST['date_sent'],
+                serial_number=request.POST['serial_number'],
+                reference=request.POST['reference'],
+                subject=request.POST['subject'],
+                recipient=request.POST['recipient'],
+                sent_by=sent_by_user,
+                remarks=request.POST.get('remarks'),
+                scanned_copy=request.FILES.get('scanned_copy'),
+            )
+        return redirect('file_manager_app:outgoing_letter_list')
+    else:
+        context = {
+            'outgoing_letter': outgoing_letter,
+            'all_users': all_users,
+        }
+        return render(request, 'outgoing_letters/outgoing_letter_form.html', context)
 
+@login_required
+def outgoing_letter_confirm_delete(request, pk):
+    outgoing_letter = get_object_or_404(OutgoingLetter, pk=pk)
+    if request.method == 'POST':
+        # Soft delete scanned copy if exists
+        if outgoing_letter.scanned_copy:
+            delete_file_soft(outgoing_letter.scanned_copy.path)
+        outgoing_letter.delete()
+        return redirect('file_manager_app:archived_files_list')
+    context = {'outgoing_letter': outgoing_letter}
+    return render(request, 'outgoing_letters/outgoing_letter_confirm_delete.html', context)
 
-class OutgoingLetterCreateView(CreateView):
-    """
-    Handles the creation of a new outgoing letter.
-    """
-    model = OutgoingLetter
-    form_class = OutgoingLetterForm
-    template_name = 'outgoing_letters/outgoing_letter_form.html'
-    success_url = reverse_lazy('file_manager_app:outgoing_letter_list')
+@login_required
+def outgoing_letter_receipt(request, pk):
+    outgoing_letter = get_object_or_404(OutgoingLetter.objects.select_related('sent_by'), pk=pk)
+    context = {'outgoing_letter': outgoing_letter}
+    return render(request, 'outgoing_letters/outgoing_letter_receipt.html', context)
 
-    def form_valid(self, form):
-        # Attach the current user as the sender automatically
-        form.instance.sent_by = self.request.user
-        messages.success(self.request, 'Outgoing letter created successfully.')
-        return super().form_valid(form)
-
-
-class OutgoingLetterUpdateView(UpdateView):
-    """
-    Handles the update of an existing outgoing letter.
-    """
-    model = OutgoingLetter
-    form_class = OutgoingLetterForm
-    template_name = 'outgoing_letters/outgoing_letter_form.html'
-    success_url = reverse_lazy('file_manager_app:outgoing_letter_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Outgoing letter updated successfully.')
-        return super().form_valid(form)
-
-
-class OutgoingLetterDeleteView(DeleteView):
-    """
-    Handles the deletion of an outgoing letter.
-    Note: The `delete_file_soft` is called from the `models.py` `pre_delete` signal.
-    """
-    model = OutgoingLetter
-    template_name = 'outgoing_letters/outgoing_letter_confirm_delete.html'
-    context_object_name = 'outgoing_letter'
-    success_url = reverse_lazy('file_manager_app:archived_files_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Outgoing letter deleted and archived successfully.')
-        return super().form_valid(form)
 
 
 # -----------------------------------------------------------
 # --- Filings Views (Class-Based Views) ---
 # -----------------------------------------------------------
-class FilingListView(ListView):
-    """
-    Lists all filings.
-    """
-    model = Filing
-    template_name = 'filings/filing_list.html'
-    context_object_name = 'filing_list'
-    paginate_by = 20
+@login_required
+def filing_list(request):
+    filings = Filing.objects.all().order_by('-receiving_date')
+    paginator = Paginator(filings, 20)
+    page = request.GET.get('page')
+    try:
+        filing_list = paginator.page(page)
+    except PageNotAnInteger:
+        filing_list = paginator.page(1)
+    except EmptyPage:
+        filing_list = paginator.page(paginator.num_pages)
+    context = {'filing_list': filing_list}
+    return render(request, 'filings/filing_list.html', context)
 
+@login_required
+def filing_detail(request, pk):
+    filing = get_object_or_404(Filing.objects.select_related('receiving_officer'), pk=pk)
+    filing_documents = filing.documents.all()
+    context = {
+        'filing': filing,
+        'filing_documents': filing_documents,
+    }
+    return render(request, 'filings/filing_detail.html', context)
 
-class FilingDetailView(DetailView):
-    """
-    Displays the details of a specific filing and its documents.
-    """
-    model = Filing
-    template_name = 'filings/filing_detail.html'
-    context_object_name = 'filing'
+@login_required
+def filing_form(request, pk=None):
+    filing = None
+    if pk:
+        filing = get_object_or_404(Filing, pk=pk)
+    if request.user.is_superuser:
+        receiving_officers = User.objects.all().order_by('username')
+    else:
+        receiving_officers = User.objects.filter(pk=request.user.pk)
+    if request.method == 'POST':
+        data = request.POST.copy()
+        if not request.user.is_superuser:
+            data['receiving_officer'] = request.user.pk
+        receiving_officer_obj = get_object_or_404(User, pk=data['receiving_officer'])
+        if filing:
+            filing.file_reference = data.get('file_reference', filing.file_reference)
+            filing.file_name = data.get('file_name', filing.file_name)
+            filing.serial_number = data.get('serial_number', filing.serial_number)
+            filing.receiving_department = data.get('receiving_department', filing.receiving_department)
+            filing.receiving_officer = receiving_officer_obj
+            filing.receiving_date = data.get('receiving_date', filing.receiving_date)
+            if 'scanned_copy' in request.FILES:
+                filing.scanned_copy = request.FILES['scanned_copy']
+            filing.save()
+        else:
+            Filing.objects.create(
+                file_reference=data['file_reference'],
+                file_name=data['file_name'],
+                serial_number=data['serial_number'],
+                receiving_department=data['receiving_department'],
+                receiving_officer=receiving_officer_obj,
+                receiving_date=data['receiving_date'],
+                scanned_copy=request.FILES.get('scanned_copy'),
+            )
+        return redirect('file_manager_app:filing_list')
+    else:
+        context = {
+            'filing': filing,
+            'receiving_officers': receiving_officers,
+        }
+        return render(request, 'filings/filing_form.html', context)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Fetch all related documents for this filing
-        context['filing_documents'] = self.object.documents.all()
-        return context
+@login_required
+def filing_confirm_delete(request, pk):
+    filing = get_object_or_404(Filing, pk=pk)
+    if request.method == 'POST':
+        # Soft delete scanned copy if exists
+        if filing.scanned_copy:
+            delete_file_soft(filing.scanned_copy.path)
+        filing.delete()
+        return redirect('file_manager_app:archived_files_list')
+    context = {'filing': filing}
+    return render(request, 'filings/filing_confirm_delete.html', context)
 
+@login_required
+def filing_document_form(request, filing_pk):
+    filing = get_object_or_404(Filing, pk=filing_pk)
+    if request.method == 'POST':
+        document_name = request.POST.get('document_name')
+        folio_number = request.POST.get('folio_number')
+        uploaded_file = request.FILES.get('uploaded_file')
+        if not uploaded_file:
+            return render(request, 'filings/filing_document_form.html', {
+                'filing': filing, 'error': 'No file uploaded.'
+            })
+        try:
+            filing_document = FilingDocument(
+                filing=filing,
+                document_name=document_name,
+                folio_number=folio_number,
+                uploaded_file=uploaded_file
+            )
+            filing_document.full_clean()
+            filing_document.save()
+            return redirect('file_manager_app:filing_detail', pk=filing.pk)
+        except ValidationError as e:
+            return render(request, 'filings/filing_document_form.html', {
+                'filing': filing, 'error': e.message
+            })
+        except Exception as e:
+            return render(request, 'filings/filing_document_form.html', {
+                'filing': filing, 'error': f'File upload failed: {e}'
+            })
+    context = {'filing': filing}
+    return render(request, 'filings/filing_document_form.html', context)
 
-class FilingCreateView(CreateView):
-    """
-    Handles the creation of a new filing.
-    """
-    model = Filing
-    form_class = FilingForm
-    template_name = 'filings/filing_form.html'
-    success_url = reverse_lazy('file_manager_app:filing_list')
-
-    def form_valid(self, form):
-        # Attach the current user as the receiving officer automatically
-        form.instance.receiving_officer = self.request.user
-        messages.success(self.request, 'Filing created successfully.')
-        return super().form_valid(form)
-
-
-class FilingUpdateView(UpdateView):
-    """
-    Handles the update of an existing filing.
-    """
-    model = Filing
-    form_class = FilingForm
-    template_name = 'filings/filing_form.html'
-    success_url = reverse_lazy('file_manager_app:filing_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Filing updated successfully.')
-        return super().form_valid(form)
-
-
-class FilingDeleteView(DeleteView):
-    """
-    Handles the deletion of a filing.
-    Note: The `delete_file_soft` is called from the `models.py` `pre_delete` signal.
-    """
-    model = Filing
-    template_name = 'filings/filing_confirm_delete.html'
-    context_object_name = 'filing'
-    success_url = reverse_lazy('file_manager_app:archived_files_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Filing deleted and archived successfully.')
-        return super().form_valid(form)
-
-
-class FilingDocumentCreateView(CreateView):
-    """
-    Handles the creation of a new document for a specific filing.
-    """
-    model = FilingDocument
-    form_class = FilingDocumentForm
-    template_name = 'filings/filing_document_form.html'
-
-    def get_success_url(self):
-        # Redirect back to the filing detail page after creating a document
-        return reverse_lazy('file_manager_app:filing_detail', kwargs={'pk': self.kwargs['filing_pk']})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Add the parent filing object to the context
-        context['filing'] = get_object_or_404(Filing, pk=self.kwargs['filing_pk'])
-        return context
-
-    def form_valid(self, form):
-        # Associate the new document with the correct filing
-        filing = get_object_or_404(Filing, pk=self.kwargs['filing_pk'])
-        form.instance.filing = filing
-        messages.success(self.request, 'Document created successfully.')
-        return super().form_valid(form)
-
+@login_required
+def filing_document_confirm_delete(request, pk):
+    filing_document = get_object_or_404(FilingDocument, pk=pk)
+    filing_pk = filing_document.filing.pk
+    if request.method == 'POST':
+        # Soft delete uploaded file if exists
+        if filing_document.uploaded_file:
+            delete_file_soft(filing_document.uploaded_file.path)
+        filing_document.delete()
+        return redirect('file_manager_app:archived_files_list')
+    context = {'filing_document': filing_document}
+    return render(request, 'filings/filing_document_confirm_delete.html', context)
 
 class FilingDocumentDeleteView(DeleteView):
     """
@@ -664,49 +734,135 @@ class FilingDocumentDeleteView(DeleteView):
 
 
 # -----------------------------------------------------------
-# --- Archived Files Views (Class-Based Views) ---
+# --- Archived Files Views  ---
 # -----------------------------------------------------------
-class ArchivedFilesListView(ListView):
-    """
-    Lists all archived files, separated by category.
-    """
-    model = ArchivedFile
-    template_name = 'files/archived_files_list.html'
-    context_object_name = 'archived_files'
-    
-    def get_queryset(self):
-        # We need to filter the queryset to get non-restored files
-        return ArchivedFile.objects.filter(restored=False)
+@login_required
+def archived_files_list(request):
+    setup_directories()  # Ensure archive dir exists
+    archived_incoming = ArchivedFile.objects.filter(category='incoming', restored=False)
+    archived_outgoing = ArchivedFile.objects.filter(category='outgoing', restored=False)
+    archived_filing = ArchivedFile.objects.filter(category='filing', restored=False)
+    context = {
+        'archived_incoming': archived_incoming,
+        'archived_outgoing': archived_outgoing,
+        'archived_filing': archived_filing,
+    }
+    return render(request, 'files/archived_files_list.html', context)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Separate the queryset into categories for easier template rendering
-        context['archived_incoming'] = context['archived_files'].filter(category='incoming')
-        context['archived_outgoing'] = context['archived_files'].filter(category='outgoing')
-        context['archived_filing'] = context['archived_files'].filter(category='filing')
-        return context
-
-
-class RestoreArchivedFileView(UpdateView):
-    """
-    Handles the restoration of an archived file.
-    """
-    model = ArchivedFile
-    fields = []  # No fields are needed for a simple restore action
-    template_name = 'files/restore_confirm.html'
-    success_url = reverse_lazy('file_manager_app:archived_files_list')
-
-    def form_valid(self, form):
-        # Call the helper function to restore the file to its original location
-        success = restore_file(self.object.archived_name)
+@login_required
+def restore_archived_file(request, pk):
+    archived_file = get_object_or_404(ArchivedFile, pk=pk, restored=False)
+    if request.method == 'POST':
+        success = restore_file(archived_file.archived_name)
         if success:
-            # Mark the file as restored in the database
-            self.object.restored = True
-            self.object.save()
-            messages.success(self.request, f"File '{self.object.original_name}' restored successfully.")
-        else:
-            messages.error(self.request, f"Failed to restore file '{self.object.original_name}'.")
-        return super().form_valid(form)
+            archived_file.restored = True
+            archived_file.save()
+        return redirect('file_manager_app:archived_files_list')
+    return render(request, 'files/restore_confirm.html', {'archived_file': archived_file})
+
+
+
+# -----------------------------------------------------------
+# --- other Views  ---
+# -----------------------------------------------------------
+
+@login_required
+def search_results(request):
+    query = request.GET.get('q', '')
+    incoming_results = []
+    outgoing_results = []
+    filing_results = []
+    if query:
+        incoming_results = IncomingLetter.objects.filter(
+            Q(subject__icontains=query) |
+            Q(reference__icontains=query) |
+            Q(author__icontains=query) |
+            Q(receiving_officer__username__icontains=query)
+        ).distinct()
+        outgoing_results = OutgoingLetter.objects.filter(
+            Q(subject__icontains=query) |
+            Q(reference__icontains=query) |
+            Q(recipient__icontains=query) |
+            Q(sent_by__username__icontains=query)
+        ).distinct()
+        filing_results = Filing.objects.filter(
+            Q(file_name__icontains=query) |
+            Q(file_reference__icontains=query) |
+            Q(serial_number__icontains=query) |
+            Q(receiving_department__icontains=query) |
+            Q(receiving_officer__username__icontains=query)
+        ).distinct()
+    context = {
+        'query': query,
+        'incoming_results': incoming_results,
+        'outgoing_results': outgoing_results,
+        'filing_results': filing_results,
+    }
+    return render(request, 'search/search_results.html', context)
+
+@login_required
+def report_dashboard(request):
+    return render(request, 'reports/report_dashboard.html')
+
+@login_required
+def letter_volume_report(request):
+    incoming_counts = IncomingLetter.objects.extra({'month': "strftime('%%Y-%%m', received_date)"}).values('month').annotate(count=Count('id')).order_by('month')
+    outgoing_counts = OutgoingLetter.objects.extra({'month': "strftime('%%Y-%%m', date_sent)"}).values('month').annotate(count=Count('id')).order_by('month')
+    context = {
+        'incoming_counts': incoming_counts,
+        'outgoing_counts': outgoing_counts,
+    }
+    return render(request, 'reports/letter_volume_report.html', context)
+
+@login_required
+def filing_type_report(request):
+    filings = Filing.objects.all().order_by('-receiving_date')
+    paginator = Paginator(filings, 20)
+    page = request.GET.get('page')
+    try:
+        filing_list = paginator.page(page)
+    except PageNotAnInteger:
+        filing_list = paginator.page(1)
+    except EmptyPage:
+        filing_list = paginator.page(paginator.num_pages)
+    context = {'filing_list': filing_list}
+    return render(request, 'reports/filing_type_report.html', context)
+
+
+
+# --- Print and Move Incoming Letter to Outgoing ---
+@login_required
+def incoming_letter_print_and_move(request, pk):
+    incoming_letter = get_object_or_404(IncomingLetter, pk=pk)
+    receipt_html = render_to_string('outgoing_letters/outgoing_letter_receipt.html', {'outgoing_letter': incoming_letter})
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as tmp:
+        tmp.write(receipt_html.encode('utf-8'))
+        tmp_path = tmp.name
+    # You must have a receipt_file field in OutgoingLetter for this to work
+    outgoing_letter = OutgoingLetter.objects.create(
+        reference=incoming_letter.reference,
+        subject=incoming_letter.subject,
+        recipient=incoming_letter.author,
+        date_sent=timezone.now(),
+        sent_by=incoming_letter.receiving_officer,
+        serial_number=f"OUT-{incoming_letter.serial_number}",
+        remarks=incoming_letter.remarks,
+        scanned_copy=incoming_letter.scanned_copy,
+        # receipt_file=tmp_path  # Uncomment if you have this field
+    )
+    incoming_letter.delete()
+    return redirect('file_manager_app:outgoing_letter_detail', pk=outgoing_letter.pk)
+
+@login_required
+def restore_archived_file(request, pk):
+    archived_file = get_object_or_404(ArchivedFile, pk=pk, restored=False)
+    if request.method == 'POST':
+        success = restore_file(archived_file.archived_name)
+        if success:
+            archived_file.restored = True
+            archived_file.save()
+        return redirect('file_manager_app:archived_files_list')
+    return render(request, 'files/restore_confirm.html', {'archived_file': archived_file})
 
 def custom_403_view(request, exception):
     """
